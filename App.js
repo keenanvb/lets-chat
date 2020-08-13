@@ -3,9 +3,11 @@ import React from 'react';
 import Splash from './src/screens/Splash';
 import Login from './src/screens/Login';
 import SignUp from './src/screens/SignUp';
+import ForgotPassword from './src/screens/ForgotPassword';
 
 import Screen1 from './src/screens/drawer/screen1Settings';
-import Screen2 from './src/screens/drawer/screen2Logout';
+import Screen2 from './src/screens/drawer/screen2Account';
+import Screen3 from './src/screens/drawer/screen3Logout';
 
 import Tab1 from './src/screens/tabs/Tab1Profile';
 import Tab2 from './src/screens/tabs/Tab2Swipe';
@@ -65,6 +67,12 @@ const App = () => {
         options={{ headerShown: false }}
       />
 
+      <Stack.Screen
+        name="ForgotPassword"
+        component={ForgotPassword}
+        options={{ headerShown: false }}
+      />
+
       {/* <Stack.Screen name="Bottom Tabs" children={createBottomTabs} /> */}
       <Stack.Screen
         name="Top Tabs"
@@ -95,8 +103,12 @@ const App = () => {
         component={Screen1}
       />
       <Drawer.Screen
-        name="Logout"
+        name="Account"
         component={Screen2}
+      />
+      <Drawer.Screen
+        name="Logout"
+        component={Screen3}
       />
     </Drawer.Navigator>
 

@@ -9,9 +9,9 @@ import Feather from 'react-native-vector-icons/Feather';
 const SignUp = ({ navigation, registerWithEmailAndPassword }) => {
 
     const [signUpData, setSignUpData] = useState({
-        email: '',
-        password: 'password1234',
-        confirmPassword: 'password1234',
+        email: 'admin@gmail.com',
+        password: 'admin@gmail.com',
+        confirmPassword: 'admin@gmail.com',
         formErrors: {
             email: false
         }

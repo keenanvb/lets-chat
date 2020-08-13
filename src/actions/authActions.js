@@ -2,7 +2,7 @@ import axios from 'axios'
 import { setAlert } from './index'
 import { auth, db } from '../config/firebase'
 import firebase from 'firebase'
-import { REGISTER_SUCCESS, REGISTER_FAIL, USER_LOADED, AUTH_ERROR, LOGIN_SUCCESS, LOGIN_FAIL, LOG_OUT, CLEAR_PROFILE } from './types';
+import { REGISTER_SUCCESS, REGISTER_FAIL, USER_LOADED, AUTH_ERROR, LOGIN_SUCCESS, LOGIN_FAIL, LOG_OUT } from './types';
 // import setAuthToken from '../utils/setAuthToken'
 
 //Load user
@@ -65,10 +65,6 @@ export const registerWithEmailAndPassword = ({ username, email, password }, navi
 
                 await db.collection('users').doc(response.user.uid).set(user);
 
-                navigation.navigate('Top Tabs');
-
-
-
                 dispatch({
                     type: REGISTER_SUCCESS,
                     payload: response.user.uid
@@ -104,7 +100,7 @@ export const loginWithEmailAndPassword = ({ email, password }, navigation) => {
             //load user
             dispatch(loadUser(response.user.uid));
 
-            navigation.navigate('Top Tabs')
+            navigation.navigate('Top Tabs');
         } catch (err) {
             console.log('err', err);
             dispatch(setAlert('Oops something went wrong', 'danger'));
@@ -116,13 +112,31 @@ export const loginWithEmailAndPassword = ({ email, password }, navigation) => {
     }
 }
 
-export const logout = () => {
-    return (dispatch) => {
-        dispatch({
-            type: CLEAR_PROFILE
-        })
-        dispatch({
-            type: LOG_OUT
-        })
+export const signOut = (navigation) => {
+    return async (dispatch) => {
+        try {
+            await auth.signOut();
+
+            navigation.navigate('Login');
+
+            dispatch({
+                type: LOG_OUT
+            })
+        } catch (err) {
+            console.log('logout err', err);
+        }
+
+    }
+}
+
+export const resetPassword = (email, navigation) => {
+    return async (dispatch) => {
+        try {
+            await auth.sendPasswordResetEmail(email);
+            navigation.navigate('Login');
+
+        } catch (err) {
+            console.log('ForgotPassword err', err);
+        }
     }
 }

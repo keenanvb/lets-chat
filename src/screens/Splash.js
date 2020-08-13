@@ -1,16 +1,45 @@
-import React from 'react'
+import React, { useEffect } from 'react'
+import { connect } from 'react-redux';
 import { Text, View, StyleSheet, StatusBar, Dimensions, TouchableOpacity } from 'react-native'
 import * as Animatable from 'react-native-animatable'
 import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Slides from '../components/Slides';
+import { auth } from '../config/firebase';
+import { loadUser } from '../actions/index';
+import store from '../store';
+const Splash = ({ authenticate, navigation }) => {
 
-const Splash = ({ navigation }) => {
+    useEffect(() => {
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                await store.dispatch(loadUser(user.uid));
+                navigation.navigate('Top Tabs');
+            } else {
+                console.log('no user logged in')
+            }
+        }, (error) => {
+            console.log('error', error);
+        });
+
+    }, []);
 
     const { container, header, footer, logo, title, text, button, signIn, textSignIn } = styles
+
+    const slideData = [
+        { text: 'Welcome to App', colour: '#05375a' },
+        { text: 'Swipe', colour: '#e74c3c' },
+        { text: 'Swpie', colour: '#f1c40f', button: true }
+    ]
+
+    const onSLidesComplete = () => {
+        navigation.navigate('Login');
+    }
 
     return (
         <View style={container}>
             <StatusBar barStyle="light-content" />
+            <Slides data={slideData} onComplete={onSLidesComplete} />
             <View style={header}>
                 <Animatable.Image
                     animation="bounceIn"
@@ -91,4 +120,10 @@ const styles = StyleSheet.create({
     }
 });
 
-export default Splash
+const mapStateToProps = (state) => {
+    return {
+        authenticate: state.auth
+    }
+}
+
+export default connect(mapStateToProps, {})(Splash)

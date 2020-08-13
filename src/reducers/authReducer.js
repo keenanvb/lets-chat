@@ -1,6 +1,5 @@
 import { REGISTER_SUCCESS, REGISTER_FAIL, USER_LOADED, AUTH_ERROR, LOGIN_SUCCESS, LOGIN_FAIL, LOG_OUT, ACCOUNT_DELETE } from '../actions/types';
 
-//when the application renders first
 const INITIAL_STATE = {
     // token: localStorage.getItem('token'),
     isAuthenticated: null,
@@ -16,7 +15,7 @@ export default (state = INITIAL_STATE, action) => {
 
     switch (type) {
         case USER_LOADED:
-            return { ...state, user: payload, isAuthenticated: true, loading: false }
+            return { ...state, uid: payload.uid, user: payload, isAuthenticated: true, loading: false }
         case REGISTER_SUCCESS:
         case LOGIN_SUCCESS:
             // localStorage.setItem('token', payload.token)

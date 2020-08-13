@@ -3,13 +3,13 @@ import { View, Text } from 'react-native';
 
 import { styles } from '../../styles/styles.js'
 
-const Logout = () => {
+const Account = () => {
   return (
     <View style={styles.center}>
-      <Text style={styles.title}>Logout</Text>
+      <Text style={styles.title}>Account</Text>
     </View>
   )
 }
 
 
-export default Logout;
+export default Account;

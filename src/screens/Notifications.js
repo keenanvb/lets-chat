@@ -62,7 +62,7 @@ const Notification = ({ alerts }) => {
       },
     ],
   };
-  console.log('alerts', alerts);
+
   return (
     <>
       <Animated.View

@@ -1,39 +1,19 @@
 import React, { useState, useEffect } from 'react'
 import { Text, View, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView } from 'react-native'
-import { connect } from 'react-redux'
-import { loginWithEmailAndPassword } from '../actions/index'
+import { connect } from 'react-redux';
+import { resetPassword } from '../actions/index'
 import Feather from 'react-native-vector-icons/Feather';
-import LinearGradient from 'react-native-linear-gradient';
 import * as Animatable from 'react-native-animatable';
-import { auth } from '../config/firebase'
-import Notifications from './Notifications'
+import Notifications from './Notifications';
 
-// const Login = ({ auth, getUser, navigation, login }) => {
-const Login = ({ auth: { user, loading }, navigation, loginWithEmailAndPassword }) => {
+const ForgotPassword = ({ navigation, resetPassword }) => {
 
     const [formData, setFormData] = useState({
         email: 'admin@gmail.com',
-        password: 'admin@gmail.com',
         formErrors: {
             email: false
         }
     });
-
-    // useEffect(() => {
-    //     auth.onAuthStateChanged(async (user) => {
-    //         if (user) {
-    //             console.log('user', user);
-    //             alert("Signed in user!")
-    //         } else {
-    //             alert("No user!")
-    //         }
-    //     }, (error) => {
-    //         console.log('error', error);
-    //     })
-
-    // }, [])
-
-    const [secureText, setSecureText] = useState(true)
 
     const onFormDataChange = (name, text) => {
         const { formErrors } = formData
@@ -53,24 +33,23 @@ const Login = ({ auth: { user, loading }, navigation, loginWithEmailAndPassword 
         /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/
     );
 
-    const handleLogin = () => {
-        loginWithEmailAndPassword({ email, password }, navigation);
-    }
-
-    const handleSignUp = () => {
-        navigation.navigate('SignUp');
-    }
 
     const { container, header, footer,
         header_text, footer_text, action,
         textInput, textForgotPassword, button, signIn, textSignIn, signUp } = styles
 
-    const { email, password, formErrors } = formData
+    const { email, formErrors } = formData;
+
+
+    const handlePasswordReset = () => {
+        navigation.navigate('Login');
+        resetPassword(email, navigation)
+    }
 
     return (
         <View style={container}>
             <View style={header}>
-                <Text style={header_text}> Welcome to LetsChat</Text>
+                <Text style={header_text}>Forgot password</Text>
             </View>
             <Notifications />
             <Animatable.View
@@ -94,40 +73,11 @@ const Login = ({ auth: { user, loading }, navigation, loginWithEmailAndPassword 
                             <Feather name="circle" size={20} color='grey' />
                         }
                     </View>
-                    <Text style={footer_text}> Password</Text>
-                    <View style={action}>
-                        <Feather name="lock" size={20} color='black' />
-                        <TextInput
-                            placeholder="Password"
-                            style={textInput}
-                            secureTextEntry={secureText}
-                            value={password}
-                            onChangeText={(password) => {
-                                onFormDataChange('password', password)
-                            }}
-                        />
-                        {secureText ?
-                            <Feather onPress={() => { setSecureText(!secureText) }} name="eye-off" size={20} color='gray' />
-                            :
-                            <Feather onPress={() => { setSecureText(!secureText) }} name="eye" size={20} color='gray' />
-                        }
-                    </View>
-                    <Text onPress={() => { navigation.navigate('ForgotPassword') }} style={textForgotPassword}>Forgot password?</Text>
-                    <View style={button}>
-
-                        <LinearGradient colors={['#5db8fe', '#39cff2']} style={signIn} >
-                            <Text onPress={() => {
-                                handleLogin()
-                                // navigation.navigate('Top Tabs')
-                            }} style={textSignIn}>Sign in</Text>
-                        </LinearGradient>
-
-                        <TouchableOpacity style={[signIn, signUp]} onPress={() => {
-                            handleSignUp()
-                        }}>
-                            <Text style={[textSignIn, { color: '#4dc2f8' }]}>Sign up</Text>
-                        </TouchableOpacity>
-                    </View>
+                    <TouchableOpacity style={[signIn, signUp]} onPress={() => {
+                        handlePasswordReset()
+                    }}>
+                        <Text style={[textSignIn, { color: '#4dc2f8' }]}>Reset Password</Text>
+                    </TouchableOpacity>
                 </KeyboardAvoidingView>
             </Animatable.View>
         </View>
@@ -210,4 +160,4 @@ const mapStateToProps = (state) => {
     }
 }
 
-export default connect(mapStateToProps, { loginWithEmailAndPassword })(Login)
+export default connect(mapStateToProps, { resetPassword })(ForgotPassword)
