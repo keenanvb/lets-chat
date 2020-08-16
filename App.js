@@ -13,6 +13,8 @@ import Tab1 from './src/screens/tabs/Tab1Profile';
 import Tab2 from './src/screens/tabs/Tab2Swipe';
 import Tab3 from './src/screens/tabs/Tab3Chat';
 
+import Swipe from './src/screens/Swipe';
+
 import {
   NavigationContainer,
   DefaultTheme,
@@ -71,6 +73,10 @@ const App = () => {
         name="ForgotPassword"
         component={ForgotPassword}
         options={{ headerShown: false }}
+      />
+      <Drawer.Screen
+        name="Swipe"
+        component={Swipe}
       />
 
       {/* <Stack.Screen name="Bottom Tabs" children={createBottomTabs} /> */}
@@ -132,37 +138,37 @@ const App = () => {
     </MaterialTopTabs.Navigator>
   }
 
-  const createBottomTabs = () => {
-    return <MaterialBottomTabs.Navigator>
-      <MaterialBottomTabs.Screen
-        name="Tab 1"
-        style={{ marginBottom: 16 }}
-        component={Tab1}
-        options={{
-          tabBarLabel: 'Home',
-          tabBarIcon: () => (
-            <Icon style={[{ color: 'white' }]} size={25} name={'home'} />
-          ),
-        }}
-      />
-      <MaterialBottomTabs.Screen name="Tab 2" component={Tab2}
-        options={{
-          tabBarLabel: 'Profile',
-          tabBarIcon: () => (
-            <Icon style={[{ color: 'white' }]} size={25} name={'human'} />
-          )
-        }}
-      />
-      <MaterialBottomTabs.Screen name="Tab 3" component={Tab3}
-        options={{
-          tabBarLabel: 'Map',
-          tabBarIcon: () => (
-            <Icon style={[{ color: 'white' }]} size={25} name={'map'} />
-          ),
-        }}
-      />
-    </MaterialBottomTabs.Navigator>
-  }
+  // const createBottomTabs = () => {
+  //   return <MaterialBottomTabs.Navigator>
+  //     <MaterialBottomTabs.Screen
+  //       name="Tab 1"
+  //       style={{ marginBottom: 16 }}
+  //       component={Tab1}
+  //       options={{
+  //         tabBarLabel: 'Home',
+  //         tabBarIcon: () => (
+  //           <Icon style={[{ color: 'white' }]} size={25} name={'home'} />
+  //         ),
+  //       }}
+  //     />
+  //     <MaterialBottomTabs.Screen name="Tab 2" component={Tab2}
+  //       options={{
+  //         tabBarLabel: 'Profile',
+  //         tabBarIcon: () => (
+  //           <Icon style={[{ color: 'white' }]} size={25} name={'human'} />
+  //         )
+  //       }}
+  //     />
+  //     <MaterialBottomTabs.Screen name="Tab 3" component={Tab3}
+  //       options={{
+  //         tabBarLabel: 'Map',
+  //         tabBarIcon: () => (
+  //           <Icon style={[{ color: 'white' }]} size={25} name={'map'} />
+  //         ),
+  //       }}
+  //     />
+  //   </MaterialBottomTabs.Navigator>
+  // }
 
   return (
     <Provider store={store}>

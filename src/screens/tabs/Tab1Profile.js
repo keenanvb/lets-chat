@@ -10,28 +10,33 @@ import Card from '../../components/Card'
 import CardSection from '../../components/CardSection'
 // import { styles } from '../../styles/styles.js'
 import { connect } from 'react-redux';
-import {
-  auth, db
-} from '../../config/firebase';
+import { auth, db } from '../../config/firebase';
 
 const width = Dimensions.get('window').width;
 
-const Profile = ({ authenticate: { user, uid }, removePhoto, uploadPhoto }) => {
+const ProfileTab = ({ authenticate: { user, uid }, removePhoto, uploadPhoto }) => {
   const [data, setData] = useState(null);
 
+  let unsubscribe = useRef(null);
   useEffect(() => {
-    const unsubscribe = db.collection('users').doc(uid).onSnapshot(snap => {
-      const snapData = snap.data()
+    unsubscribe.current = db.collection('users').doc(uid).onSnapshot(snap => {
+      const snapData = snap.data();
       setData(snapData);
     });
     BackHandler.addEventListener('hardwareBackPress', handleBackButton);
     return () => {
-      BackHandler.removeEventListener('hardwareBackPress', handleBackButton);
-      unsubscribe();
+      // BackHandler.removeEventListener('hardwareBackPress', handleBackButton); // does not unmount
+      // unsubscribe();
+      unsubscribe.current();
     }
   }, []);
 
   const isFocused = useIsFocused();
+
+  // if (!isFocused) {
+  //   unsubscribe.current(); // does not unmount work around useIsFocused()
+  //   BackHandler.removeEventListener('hardwareBackPress', handleBackButton);
+  // }
 
   console.log(`tab 1 ${isFocused}`);
 
@@ -76,8 +81,6 @@ const Profile = ({ authenticate: { user, uid }, removePhoto, uploadPhoto }) => {
       uploadPhoto(image);
     });
   }
-
-  console.log('user-------', data);
 
   const bs = useRef();
   const fall = new Animated.Value(1)
@@ -270,4 +273,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps, { uploadPhoto, removePhoto, loadUser })(Profile)
+export default connect(mapStateToProps, { uploadPhoto, removePhoto, loadUser })(ProfileTab)

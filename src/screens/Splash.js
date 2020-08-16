@@ -27,9 +27,9 @@ const Splash = ({ authenticate, navigation }) => {
     const { container, header, footer, logo, title, text, button, signIn, textSignIn } = styles
 
     const slideData = [
-        { text: 'Welcome to App', colour: '#05375a' },
-        { text: 'Swipe', colour: '#e74c3c' },
-        { text: 'Swpie', colour: '#f1c40f', button: true }
+        { text: 'Lets Chat - Swipe', colour: '#05375a' },
+        { text: 'Chat', colour: '#e74c3c' },
+        { text: 'Meet up', colour: '#f1c40f', button: true }
     ]
 
     const onSLidesComplete = () => {
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     textSignIn: {
         color: 'white',
         fontWeight: 'bold',
-        margin: 10
+        margin: 8,
     }
 });
 

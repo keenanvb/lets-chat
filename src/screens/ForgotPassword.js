@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     textSignIn: {
         color: 'white',
         fontWeight: 'bold',
-        margin: 20,
+        margin: 8,
         fontSize: 18
     },
     signUp: {

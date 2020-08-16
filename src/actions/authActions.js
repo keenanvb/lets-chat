@@ -39,7 +39,7 @@ export const loadUser = (uid) => {
 }
 
 //Register user
-export const registerWithEmailAndPassword = ({ username, email, password }, navigation) => {
+export const registerWithEmailAndPassword = ({ fullName, email, password }, navigation) => {
     return async (dispatch) => {
         try {
             let response = await auth.createUserWithEmailAndPassword(email, password);
@@ -48,7 +48,7 @@ export const registerWithEmailAndPassword = ({ username, email, password }, navi
                 const user = {
                     uid: response.user.uid,
                     email,
-                    username: '',
+                    fullName: fullName,
                     photo: '',
                     bio: '',
                     token: null,
