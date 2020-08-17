@@ -14,7 +14,7 @@ const ChatTab = ({ authenticate, navigation }) => {
   useEffect(() => {
     unsubscribe2.current = db.collection('connections').doc(authenticate.uid).onSnapshot(snap => {
       const snapData = snap.data();
-      setData(snapData.users);
+      setData(snapData);
     });
 
     return () => {
@@ -35,10 +35,9 @@ const ChatTab = ({ authenticate, navigation }) => {
         <Text style={styles.title}>No connections made</Text>
         :
         <ScrollView>
-          {data.map((user, index) => {
+          {data.users.map((user, index) => {
             return (
-              <TouchableOpacity key={index} onPress={() => navigation.navigate('Chat', { name: user.fullName })} >
-                {/* <TouchableOpacity key={index} onPress={() => null} > */}
+              <TouchableOpacity key={index} onPress={() => navigation.navigate('Chat', { name: user.fullName, id: user.id })} >
                 <CardSection>
                   <Image style={styles.img} source={require('../../assets/blank-profile-picture.png')} />
                   <Text style={[styles.bold, styles.center]}>{user.fullName}</Text>

@@ -58,40 +58,51 @@ const Swipe = ({ authenticate }) => {
 
 
   const checkMatch = async () => {
-    if (currentCard.swipes[authenticate.uid] === true) {
+    console.log('checking match')
+    console.log('authenticate.uid', authenticate.uid);
+    console.log('checking match', currentCard.swipes[authenticate.uid])
+    try {
+      if (authenticate.user.swipes[currentCard.uid] === true) {
 
+        let me = {
+          id: authenticate.uid,
+          fullName: authenticate.user.fullName,
+          // photo: currentCard.photo,
+          notifications: [],
+          // createdAt: firebase.firestore.FieldValue.serverTimestamp(), //Time stamp not supported in arrays??
+          // updateAt: firebase.firestore.FieldValue.serverTimestamp(),
+        }
 
+        let connection = {
+          users: [me]
+        };
+        await db.collection('connections').doc(currentCard.uid).set(connection);
 
-      let me = {
-        id: authenticate.uid,
-        fullName: authenticate.user.fullName,
-        // photo: currentCard.photo,
-        notifications: [],
-        // createdAt: firebase.firestore.FieldValue.serverTimestamp(), //Time stamp not supported in arrays??
-        // updateAt: firebase.firestore.FieldValue.serverTimestamp(),
+        let otheUser = {
+          id: currentCard.uid,
+          fullName: currentCard.fullName,
+          // photo: currentCard.photo,
+          notifications: [],
+          // createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          // updateAt: firebase.firestore.FieldValue.serverTimestamp(),
+        }
+
+        let connection2 = {
+          users: [otheUser]
+        };
+        await db.collection('connections').doc(authenticate.uid).set(connection2);
+
+        let chat = {
+          notifications: [],
+          messages: []
+        }
+
+        await db.collection('chats').doc(createChatId(authenticate.uid, currentCard.uid)).set(chat);
       }
-
-      let connection = {
-        users: [me]
-      }
-      await db.collection('connections').doc(currentCard.uid).set(connection);
-
-
-
-      let otheUser = {
-        id: currentCard.uid,
-        fullName: currentCard.fullName,
-        // photo: currentCard.photo,
-        notifications: [],
-        // createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        // updateAt: firebase.firestore.FieldValue.serverTimestamp(),
-      }
-
-      let connection2 = {
-        users: [otheUser]
-      }
-      await db.collection('connections').doc(authenticate.uid).set(connection2);
+    } catch (e) {
+      console.log('e', e)
     }
+
   }
 
   const _panResponder = PanResponder.create({
@@ -125,7 +136,7 @@ const Swipe = ({ authenticate }) => {
 
       if (dx > SWIPE_THRESHOLD) {
         await handleFirebaseYes();
-        Animated.decay(state.animation, {
+        await Animated.decay(state.animation, {
           velocity: { x: velocity, y: vy },
           deceleration: 0.98,
           useNativeDriver: true

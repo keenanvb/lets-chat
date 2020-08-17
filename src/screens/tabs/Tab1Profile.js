@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, ScrollView, Alert, Image, StyleSheet, TouchableOpacity, TextInput, Dimensions, BackHandler } from 'react-native';
+import {
+  View, Text, ScrollView, Alert, Image, StyleSheet,
+  TouchableOpacity, TextInput, Dimensions, BackHandler,
+} from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import { useIsFocused } from '@react-navigation/native';
 import ImagePicker from 'react-native-image-crop-picker';
@@ -23,7 +26,7 @@ const ProfileTab = ({ authenticate: { user, uid }, removePhoto, uploadPhoto }) =
       const snapData = snap.data();
       setData(snapData);
     });
-    BackHandler.addEventListener('hardwareBackPress', handleBackButton);
+    // BackHandler.addEventListener('hardwareBackPress', handleBackButton);
     return () => {
       // BackHandler.removeEventListener('hardwareBackPress', handleBackButton); // does not unmount
       // unsubscribe();
@@ -40,23 +43,23 @@ const ProfileTab = ({ authenticate: { user, uid }, removePhoto, uploadPhoto }) =
 
   console.log(`tab 1 ${isFocused}`);
 
-  const handleBackButton = () => {
-    // Alert.alert(
-    //   'Exit App',
-    //   'Exiting the application?', [{
-    //     text: 'Cancel',
-    //     onPress: () => console.log('Cancel Pressed'),
-    //     style: 'cancel'
-    //   }, {
-    //     text: 'OK',
-    //     onPress: () => BackHandler.exitApp()
-    //   },], {
-    //   cancelable: false
-    // }
-    // )
-    BackHandler.exitApp();
-    return true;
-  }
+  // const handleBackButton = () => {
+  // Alert.alert(
+  //   'Exit App',
+  //   'Exiting the application?', [{
+  //     text: 'Cancel',
+  //     onPress: () => console.log('Cancel Pressed'),
+  //     style: 'cancel'
+  //   }, {
+  //     text: 'OK',
+  //     onPress: () => BackHandler.exitApp()
+  //   },], {
+  //   cancelable: false
+  // }
+  // )
+  //   BackHandler.exitApp();
+  //   return true;
+  // }
 
   const takePhotoFromCamera = () => {
     ImagePicker.openCamera({
@@ -136,9 +139,9 @@ const ProfileTab = ({ authenticate: { user, uid }, removePhoto, uploadPhoto }) =
             {data && data.images.length > 0 ? <Image style={styles.img} source={{ uri: data.images[0].downloadURL }} />
               : <Image style={styles.img} source={require('../../assets/blank-profile-picture.png')} />}
             <Text style={[styles.center, styles.bold]} >{data && data.username}</Text>
-            <CardSection>
-              <Text style={[styles.bold]} >{data && data.email}</Text>
-            </CardSection>
+            {/* <CardSection> */}
+            <Text style={[styles.bold]} >{data && data.email}</Text>
+            {/* </CardSection> */}
           </View>
         </Card>
         <View style={styles.imgRow}>
@@ -150,9 +153,7 @@ const ProfileTab = ({ authenticate: { user, uid }, removePhoto, uploadPhoto }) =
             );
           }) : null}
           <TouchableOpacity style={[styles.img, styles.center]} onPress={() => {
-            // addImage() 
             bs.current.snapTo(0)
-
           }}>
             <Feather name="plus" size={75} style={styles.color} />
           </TouchableOpacity>

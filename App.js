@@ -15,6 +15,8 @@ import Tab3 from './src/screens/tabs/Tab3Chat';
 
 import Swipe from './src/screens/Swipe';
 
+import Chat from './src/screens/Chat'
+
 import {
   NavigationContainer,
   DefaultTheme,
@@ -132,11 +134,31 @@ const App = () => {
       />
       <MaterialTopTabs.Screen
         name="Tab 3"
-        component={Tab3}
+        component={createChatStack}
         options={{ title: 'Chat' }}
       />
     </MaterialTopTabs.Navigator>
   }
+
+
+  const createChatStack = (props) => {
+    console.log('props', props);
+    return (<Stack.Navigator    >
+      <Stack.Screen
+        name="Connections"
+        component={Tab3}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Chat"
+        component={Chat}
+        // options={{ title: props.route.params.name !== undefined ? props.route.params.name : 'Chat' }}
+        options={{ headerShown: false }}
+      />
+
+    </Stack.Navigator>)
+  }
+
 
   // const createBottomTabs = () => {
   //   return <MaterialBottomTabs.Navigator>
