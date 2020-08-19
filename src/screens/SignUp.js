@@ -9,37 +9,43 @@ import Feather from 'react-native-vector-icons/Feather';
 const SignUp = ({ navigation, registerWithEmailAndPassword }) => {
 
     const [signUpData, setSignUpData] = useState({
+        name: '',
         email: 'admin@gmail.com',
         password: 'admin@gmail.com',
         confirmPassword: 'admin@gmail.com',
         formErrors: {
-            email: false
+            email: false,
+            name: false
         }
     });
 
     const [secureText, setSecureText] = useState(true)
+    const [validName, setValidName] = useState(false)
 
     const emailRegex = RegExp(
         /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/
     );
 
-    const onFormDataChange = (name, text) => {
+    const onFormDataChange = (value, text) => {
         const { formErrors } = signUpData
-        switch (name) {
+        switch (value) {
             case "email":
                 formErrors.email = emailRegex.test(text)
                     ? true
                     : false;
                 break;
+            case "name":
+                formErrors.name = value.length > 3 ? true : false;
+                break;
             default:
                 break;
         }
-        setSignUpData({ ...signUpData, [name]: text })
+        setSignUpData({ ...signUpData, [value]: text })
     }
 
     const handleSignUp = () => {
-        const { email, password } = signUpData
-        registerWithEmailAndPassword({ email, password }, navigation);
+        const { fullName, email, password } = signUpData
+        registerWithEmailAndPassword({ fullName, email, password }, navigation);
 
     }
 
@@ -49,7 +55,7 @@ const SignUp = ({ navigation, registerWithEmailAndPassword }) => {
         signIn, textSignIn, signUp,
         disclaimer, highlightDisclaimerText, highlightDisclaimerTextBold } = styles
 
-    const { email, password, confirmPassword, formErrors } = signUpData
+    const { fullName, email, password, confirmPassword, formErrors } = signUpData
 
     return (
         <View style={container}>
@@ -78,7 +84,22 @@ const SignUp = ({ navigation, registerWithEmailAndPassword }) => {
                         <Feather name="circle" size={20} color='grey' />
                     }
                 </View> */}
-                <Text style={footer_text}> Email</Text>
+                <Text style={footer_text}> Name</Text>
+                <View style={action}>
+                    <Feather name="user" size={20} color='black' />
+                    <TextInput
+                        placeholder="Name"
+                        style={textInput}
+                        value={fullName}
+                        onChangeText={(fullName) => {
+                            onFormDataChange('fullName', fullName)
+                        }}
+                    />
+                    {formErrors.fullName ?
+                        <Feather name="check-circle" size={20} color='green' /> :
+                        <Feather name="circle" size={20} color='grey' />
+                    }
+                </View>
                 <View style={action}>
                     <Feather name="user" size={20} color='black' />
                     <TextInput
@@ -97,7 +118,11 @@ const SignUp = ({ navigation, registerWithEmailAndPassword }) => {
                 </View>
                 <Text style={footer_text}> Password</Text>
                 <View style={action}>
-                    <Feather name="lock" size={20} color='black' />
+                    {secureText ?
+                        <Feather onPress={() => { setSecureText(!secureText) }} name="lock" size={20} color='black' />
+                        :
+                        <Feather onPress={() => { setSecureText(!secureText) }} name="unlock" size={20} color='black' />
+                    }
                     <TextInput
                         placeholder="Password"
                         style={textInput}
@@ -218,7 +243,7 @@ const styles = StyleSheet.create({
     textSignIn: {
         color: 'white',
         fontWeight: 'bold',
-        margin: 20,
+        margin: 8,
         fontSize: 18
     },
     signUp: {

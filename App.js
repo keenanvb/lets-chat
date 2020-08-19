@@ -13,6 +13,10 @@ import Tab1 from './src/screens/tabs/Tab1Profile';
 import Tab2 from './src/screens/tabs/Tab2Swipe';
 import Tab3 from './src/screens/tabs/Tab3Chat';
 
+import Swipe from './src/screens/Swipe';
+
+import Chat from './src/screens/Chat'
+
 import {
   NavigationContainer,
   DefaultTheme,
@@ -72,6 +76,10 @@ const App = () => {
         component={ForgotPassword}
         options={{ headerShown: false }}
       />
+      <Drawer.Screen
+        name="Swipe"
+        component={Swipe}
+      />
 
       {/* <Stack.Screen name="Bottom Tabs" children={createBottomTabs} /> */}
       <Stack.Screen
@@ -126,43 +134,63 @@ const App = () => {
       />
       <MaterialTopTabs.Screen
         name="Tab 3"
-        component={Tab3}
+        component={createChatStack}
         options={{ title: 'Chat' }}
       />
     </MaterialTopTabs.Navigator>
   }
 
-  const createBottomTabs = () => {
-    return <MaterialBottomTabs.Navigator>
-      <MaterialBottomTabs.Screen
-        name="Tab 1"
-        style={{ marginBottom: 16 }}
-        component={Tab1}
-        options={{
-          tabBarLabel: 'Home',
-          tabBarIcon: () => (
-            <Icon style={[{ color: 'white' }]} size={25} name={'home'} />
-          ),
-        }}
+
+  const createChatStack = (props) => {
+    console.log('props', props);
+    return (<Stack.Navigator    >
+      <Stack.Screen
+        name="Connections"
+        component={Tab3}
+        options={{ headerShown: false }}
       />
-      <MaterialBottomTabs.Screen name="Tab 2" component={Tab2}
-        options={{
-          tabBarLabel: 'Profile',
-          tabBarIcon: () => (
-            <Icon style={[{ color: 'white' }]} size={25} name={'human'} />
-          )
-        }}
+      <Stack.Screen
+        name="Chat"
+        component={Chat}
+        // options={{ title: props.route.params.name !== undefined ? props.route.params.name : 'Chat' }}
+        options={{ headerShown: false }}
       />
-      <MaterialBottomTabs.Screen name="Tab 3" component={Tab3}
-        options={{
-          tabBarLabel: 'Map',
-          tabBarIcon: () => (
-            <Icon style={[{ color: 'white' }]} size={25} name={'map'} />
-          ),
-        }}
-      />
-    </MaterialBottomTabs.Navigator>
+
+    </Stack.Navigator>)
   }
+
+
+  // const createBottomTabs = () => {
+  //   return <MaterialBottomTabs.Navigator>
+  //     <MaterialBottomTabs.Screen
+  //       name="Tab 1"
+  //       style={{ marginBottom: 16 }}
+  //       component={Tab1}
+  //       options={{
+  //         tabBarLabel: 'Home',
+  //         tabBarIcon: () => (
+  //           <Icon style={[{ color: 'white' }]} size={25} name={'home'} />
+  //         ),
+  //       }}
+  //     />
+  //     <MaterialBottomTabs.Screen name="Tab 2" component={Tab2}
+  //       options={{
+  //         tabBarLabel: 'Profile',
+  //         tabBarIcon: () => (
+  //           <Icon style={[{ color: 'white' }]} size={25} name={'human'} />
+  //         )
+  //       }}
+  //     />
+  //     <MaterialBottomTabs.Screen name="Tab 3" component={Tab3}
+  //       options={{
+  //         tabBarLabel: 'Map',
+  //         tabBarIcon: () => (
+  //           <Icon style={[{ color: 'white' }]} size={25} name={'map'} />
+  //         ),
+  //       }}
+  //     />
+  //   </MaterialBottomTabs.Navigator>
+  // }
 
   return (
     <Provider store={store}>

@@ -1,30 +1,34 @@
 import React from 'react';
-import { StyleSheet, Text, View, Dimensions, ScrollView } from 'react-native';
-
+import { StyleSheet, Text, View, Dimensions, ScrollView, TouchableOpacity } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 const SCREEN_WIDTH = Dimensions.get('window').width
 // import LinearGradient from 'react-native-linear-gradient';
 
 const Slides = ({ data, onComplete }) => {
-    // const renderLastSlide = (index) => {
-    //     if (index === data.length - 1) {
-    //         return (
-    //             <LinearGradient colors={['#5db8fe', '#39cff2']} style={styles.signIn} >
-    //                 <Text onPress={() => {
-    //                     onComplete()
-    //                 }} style={styles.textSignIn}>Sign in</Text>
-    //             </LinearGradient>
-    //         )
-    //     }
-    // }
+    const renderLastSlide = (index) => {
+        if (index === data.length - 1) {
+            return (
+                <View style={button}>
+                    <TouchableOpacity style={[signIn, signUp]} onPress={() => {
+                        onComplete()
+                    }}>
+                        <Text style={[textSignIn, { color: '#4dc2f8' }]}></Text>
+                        <Ionicons name='ios-arrow-forward' size={20} color='white' />
+                    </TouchableOpacity>
+                </View>
+            )
+        }
+    }
 
 
+    const { button, signIn, textSignIn, signUp } = styles
 
     const renderSlides = () => {
         return data.map((item, index) => {
             return (
                 <View key={item.text} style={[styles.slideStyle, { backgroundColor: item.colour }]}>
                     <Text style={styles.slideText} >{item.text}</Text>
-                    {/* {renderLastSlide(index)} */}
+                    {renderLastSlide(index)}
                 </View>
             );
         });
@@ -53,12 +57,14 @@ const styles = StyleSheet.create({
         fontSize: 30,
         color: 'white'
     },
-    buttonStyle: {
-        backgroundColor: '#0288D1',
-        marginTop: 15
+    button: {
+        bottom: 10,
+        right: 10,
+        position: 'absolute',
+        alignItems: 'center',
     },
     signIn: {
-        width: '100%',
+        // width: '100%',
         height: 50,
         justifyContent: 'center',
         alignItems: 'center',
@@ -68,7 +74,7 @@ const styles = StyleSheet.create({
     textSignIn: {
         color: 'white',
         fontWeight: 'bold',
-        margin: 20,
+        margin: 8,
         fontSize: 18
     },
 });
