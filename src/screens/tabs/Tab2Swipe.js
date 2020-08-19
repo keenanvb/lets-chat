@@ -2,17 +2,17 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
   SafeAreaView, Modal, TouchableHighlight, TextInput,
-  Platform, PermissionsAndroid
+  Platform, Image
 } from 'react-native';
-import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE, Marker, Callout } from 'react-native-maps';
 import Card from '../../components/Card'
 import { useIsFocused } from '@react-navigation/native';
 import axios from 'axios';
 import _ from 'lodash';
 import LinearGradient from 'react-native-linear-gradient';
 // import Ionicons from 'react-native-vector-icons/Ionicons';
-// import Geolocation from '@react-native-community/geolocation';
-// import { request, PERMISSIONS } from 'react-native-permissions'
+import Geolocation from '@react-native-community/geolocation';
+import { request, PERMISSIONS } from 'react-native-permissions';
 
 const SwipeTab = ({ navigation }) => {
   const mapRef = useRef()
@@ -31,16 +31,23 @@ const SwipeTab = ({ navigation }) => {
   }
 
   useEffect(() => {
-    // requestLocationPermissions();
-    // Geolocation.getCurrentPosition(position => {
-    //   const {
-    //     coords: { latitude, longitude }
-    //   } = position;
+    (async () => {
+      if (Platform.OS === 'ios') {
+        let response = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+        console.log('Iphone response', response);
+        if (response == 'granted') {
+          locateCurrentPosition()
+        }
+      }
 
-    //   getLocation({ latitude: latitude, longitude: longitude });
-    //   // console.log('latitude', latitude);
-    //   // console.log('longitude', longitude);
-    // });
+      if (Platform.OS === 'android') {
+        let response = await request(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
+        console.log('android response', response);
+        if (response == 'granted') {
+          locateCurrentPosition()
+        }
+      }
+    })();
   }, []);
 
   // const requestLocationPermissions = async () => {
@@ -68,17 +75,17 @@ const SwipeTab = ({ navigation }) => {
   //   }
   // }
 
-  // const locateCurrentPosition = () => {
-  //   Geolocation.getCurrentPosition(position => {
-  //     const {
-  //       coords: { latitude, longitude }
-  //     } = position;
+  const locateCurrentPosition = () => {
+    Geolocation.getCurrentPosition(position => {
+      const {
+        coords: { latitude, longitude }
+      } = position;
 
-  //     getLocation({ latitude: latitude, longitude: longitude });
-  //     // console.log('latitude', latitude);
-  //     // console.log('longitude', longitude);
-  //   });
-  // }
+      getLocation({ latitude: latitude, longitude: longitude });
+      console.log('latitude', latitude);
+      console.log('longitude', longitude);
+    });
+  }
 
   let onRegionChange = (region) => {
     // console.log('region', region);
@@ -89,7 +96,7 @@ const SwipeTab = ({ navigation }) => {
     const { latitude, longitude } = getLocation;
 
     try {
-      const api = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=API_KEY&input=${destination}&location=${latitude},${longitude}&radius=2000`;
+      const api = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=GOOGLE_API_KEY&input=${destination}&location=${latitude},${longitude}&radius=2000`;
       let res = await axios.get(api);
 
       let data = res.data.predictions;
@@ -148,7 +155,12 @@ const SwipeTab = ({ navigation }) => {
             }}
             showsUserLocation={true}
             onRegionChange={onRegionChange}>
-            <Marker coordinate={{ latitude, longitude }} />
+            <Marker coordinate={{ latitude, longitude }}>
+              {/* <Image source={require('../../assets/blank-profile-picture.png')} /> */}
+              <Callout>
+                <Text>That's Me</Text>
+              </Callout>
+            </Marker>
           </MapView>
           <TextInput
             style={styles.destinationInput}
@@ -284,8 +296,6 @@ const styles = StyleSheet.create({
     bottom: 25,
     left: 60,
     right: 60,
-    // justifyContent: 'center',
-    // alignItems: 'center',
   },
 });
 
