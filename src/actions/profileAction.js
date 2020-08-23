@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import firebase from 'firebase';
 import { db } from '../config/firebase';
 
-export const uploadPhoto = (image) => {
+export const uploadPhoto = (image, isProfile) => {
     return async (dispatch, getState) => {
         try {
 
@@ -23,10 +23,18 @@ export const uploadPhoto = (image) => {
 
             const user = getState().auth.uid
 
-            await db.collection('users').doc(user).update({
-                images: firebase.firestore.FieldValue.arrayUnion(setImage)
-            });
+            if (isProfile) {
+                // await firebase.storage().ref().child(image).delete();
 
+                await db.collection('users').doc(user).set(
+                    { photo: setImage },
+                    { merge: true }
+                );
+            } else {
+                await db.collection('users').doc(user).update({
+                    images: firebase.firestore.FieldValue.arrayUnion(setImage)
+                });
+            }
             // return downloadURL
         } catch (e) {
             console.error(e)
@@ -35,7 +43,7 @@ export const uploadPhoto = (image) => {
 }
 
 
-export const removePhoto = (imageId) => {
+export const removePhoto = (imageId, isProfile) => {
     return async (dispatch, getState) => {
         try {
             const user = getState().auth.uid;
@@ -49,6 +57,22 @@ export const removePhoto = (imageId) => {
             );
 
             await firebase.storage().ref().child(imageId).delete();
+
+        } catch (e) {
+            console.error(e)
+        }
+    }
+}
+
+export const isActive = (active) => {
+    return async (dispatch, getState) => {
+        try {
+            const user = getState().auth.uid;
+
+            await db.collection('users').doc(user).set(
+                { show: active },
+                { merge: true }
+            );
 
         } catch (e) {
             console.error(e)

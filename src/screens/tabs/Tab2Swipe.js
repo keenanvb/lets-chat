@@ -2,17 +2,20 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
   SafeAreaView, Modal, TouchableHighlight, TextInput,
-  Platform, Image
+  Platform, Image, ScrollView
 } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Marker, Callout } from 'react-native-maps';
 import Card from '../../components/Card'
+import CardSection from '../../components/CardSection'
 import { useIsFocused } from '@react-navigation/native';
 import axios from 'axios';
 import _ from 'lodash';
 import LinearGradient from 'react-native-linear-gradient';
-// import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Geolocation from '@react-native-community/geolocation';
 import { request, PERMISSIONS } from 'react-native-permissions';
+// import FloatingActionButton from '../../components/FloatingActionButton'
 
 const SwipeTab = ({ navigation }) => {
   const mapRef = useRef()
@@ -199,29 +202,92 @@ const SwipeTab = ({ navigation }) => {
 
   return (
     <View style={[styles.container]} >
-      <Card>
-        <Text>Swipe settings</Text>
-      </Card>
-      <Card>
-        <TouchableOpacity style={[styles.signIn, styles.signUp]} onPress={() => {
-          goToSwipe()
-        }}>
-          <Text style={[styles.textSignIn, { color: '#4dc2f8' }]}>Swipe</Text>
-        </TouchableOpacity>
-      </Card>
-      <Card>
-        <TouchableOpacity style={{}} onPress={() => setShowModal(!showModal)}>
-          <Text style={{}}>{'Set current location'}</Text>
-        </TouchableOpacity>
-      </Card>
-      {modal()}
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.swipeInfoContainer}>
+          <Text style={[styles.text, { fontWeight: "200", fontSize: 36 }]}>Swipe Settings</Text>
+        </View>
+        <Card>
+          <TouchableOpacity >
+            <CardSection>
+              <Text style={[styles.bold, styles.text, styles.center]}>Interested in</Text>
+              <View style={styles.iconContent}>
+                {/* <Image style={styles.icon} source={require('../../assets/blank-profile-picture.png')} /> */}
+                <Ionicons style={styles.icon} name='ios-arrow-forward' size={20} color='black' />
+              </View>
+            </CardSection>
+          </TouchableOpacity>
+        </Card>
+        <Card>
+          <TouchableOpacity onPress={() => setShowModal(!showModal)}>
+            <CardSection>
+              <Text style={[styles.bold, styles.text, styles.center]}>Set current location</Text>
+              <View style={styles.iconContent}>
+                {/* <Image style={styles.icon} source={require('../../assets/blank-profile-picture.png')} /> */}
+                <Ionicons style={styles.icon} name='ios-arrow-forward' size={20} color='black' />
+              </View>
+            </CardSection>
+          </TouchableOpacity>
+        </Card>
+        <Card>
+          <TouchableOpacity  >
+            <CardSection>
+              <Text style={[styles.bold, styles.text, styles.center]}>Maximum distance</Text>
+              <View style={styles.iconContent}>
+                {/* <Image style={styles.icon} source={require('../../assets/blank-profile-picture.png')} /> */}
+                <Ionicons style={styles.icon} name='ios-arrow-forward' size={20} color='black' />
+              </View>
+            </CardSection>
+          </TouchableOpacity>
+        </Card>
+        <Card>
+          <TouchableOpacity  >
+            <CardSection>
+              <Text style={[styles.bold, styles.text, styles.center]}>Show Me</Text>
+              <View style={styles.iconContent}>
+                {/* <Image style={styles.icon} source={require('../../assets/blank-profile-picture.png')} /> */}
+                <Ionicons style={styles.icon} name='ios-arrow-forward' size={20} color='black' />
+              </View>
+            </CardSection>
+          </TouchableOpacity>
+        </Card>
+        <Card>
+          <TouchableOpacity  >
+            <CardSection>
+              <Text style={[styles.bold, styles.text, styles.center]}>Age range</Text>
+              <View style={styles.iconContent}>
+                {/* <Image style={styles.icon} source={require('../../assets/blank-profile-picture.png')} /> */}
+                <Ionicons style={styles.icon} name='ios-arrow-forward' size={20} color='black' />
+              </View>
+            </CardSection>
+          </TouchableOpacity>
+        </Card>
+        <Card>
+          <TouchableOpacity onPress={() => goToSwipe()}>
+            <CardSection>
+              <Text style={[styles.bold, styles.text, styles.center]}>Swipe</Text>
+              <View style={styles.iconContent}>
+                <MaterialCommunityIcons style={styles.icon} name='gesture-swipe' size={20} color='black' />
+              </View>
+            </CardSection>
+          </TouchableOpacity>
+        </Card>
+        {modal()}
+      </ScrollView>
+      {/* {isFocused ?
+        <FloatingActionButton /> : null
+      } */}
     </View>
+
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  text: {
+    fontFamily: "HelveticaNeue",
+    color: "#52575D"
   },
   signIn: {
     width: '100%',
@@ -297,6 +363,35 @@ const styles = StyleSheet.create({
     left: 60,
     right: 60,
   },
+  iconContent: {
+    width: 60,
+    height: 60,
+    // backgroundColor: '#40E0D0',
+    marginLeft: 'auto',
+  },
+  center: {
+    fontSize: 22,
+    alignSelf: 'center',
+    marginLeft: 10
+  },
+  icon: {
+    marginTop: 20,
+    //   width: 50,
+    //   height: 50,
+  },
+  bold: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  swipeInfoContainer: {
+    alignSelf: "center",
+    alignItems: "center",
+    marginTop: 16
+  },
+  swipe: {
+    position: 'absolute',
+    bottom: 10
+  }
 });
 
 export default SwipeTab;

@@ -10,6 +10,7 @@ import { createChatId } from '../utils/utils';
 import { GiftedChat, Bubble, Send } from 'react-native-gifted-chat'
 import firebase from 'firebase'
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Card from '../components/Card'
 import CardSection from '../components/CardSection'
 
 const Chat = ({ navigation, authenticate }) => {
@@ -138,13 +139,15 @@ const Chat = ({ navigation, authenticate }) => {
     return (
         <View style={styles.container}>
             <TouchableOpacity >
-                <CardSection>
-                    <View style={styles.iconContent}>
-                        <Ionicons onPress={() => navigation.navigate('Connections')} style={styles.icon} name='ios-arrow-back' size={20} color='black' />
-                    </View>
-                    <Image style={styles.img} source={require('../assets/blank-profile-picture.png')} />
-                    <Text style={[styles.bold, styles.center]}>{user && user.name}</Text>
-                </CardSection>
+                <Card>
+                    <CardSection>
+                        <View style={styles.iconContent}>
+                            <Ionicons onPress={() => navigation.navigate('Connections')} style={styles.icon} name='ios-arrow-back' size={20} color='black' />
+                        </View>
+                        <Image style={styles.img} source={require('../assets/blank-profile-picture.png')} />
+                        <Text style={[styles.bold, styles.center]}>{user && user.name}</Text>
+                    </CardSection>
+                </Card>
             </TouchableOpacity>
             <GiftedChat
                 renderUsernameOnMessage
