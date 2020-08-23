@@ -68,13 +68,13 @@ const Swipe = ({ authenticate }) => {
           id: authenticate.uid,
           fullName: authenticate.user.fullName,
           // photo: currentCard.photo,
-          notifications: [],
           // createdAt: firebase.firestore.FieldValue.serverTimestamp(), //Time stamp not supported in arrays??
           // updateAt: firebase.firestore.FieldValue.serverTimestamp(),
         }
 
         let connection = {
-          users: [me]
+          users: [me],
+          notifications: [],
         };
         await db.collection('connections').doc(currentCard.uid).set(connection);
 
@@ -82,13 +82,13 @@ const Swipe = ({ authenticate }) => {
           id: currentCard.uid,
           fullName: currentCard.fullName,
           // photo: currentCard.photo,
-          notifications: [],
           // createdAt: firebase.firestore.FieldValue.serverTimestamp(),
           // updateAt: firebase.firestore.FieldValue.serverTimestamp(),
         }
 
         let connection2 = {
-          users: [otheUser]
+          users: [otheUser],
+          notifications: [],
         };
         await db.collection('connections').doc(authenticate.uid).set(connection2);
 

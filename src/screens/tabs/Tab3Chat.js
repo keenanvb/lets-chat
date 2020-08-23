@@ -3,6 +3,7 @@ import { View, Text, BackHandler, ScrollView, TouchableOpacity, StyleSheet, Imag
 import { useIsFocused } from '@react-navigation/native';
 import { connect } from 'react-redux';
 import { db } from '../../config/firebase'
+import Card from '../../components/Card'
 import CardSection from '../../components/CardSection'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -32,21 +33,25 @@ const ChatTab = ({ authenticate, navigation }) => {
   return (
     <View style={styles.container}>
       {data === null || data === undefined ?
-        <Text style={styles.title}>No connections made</Text>
+        <View style={styles.swipeInfoContainer}>
+          <Text style={[styles.text, { fontWeight: "200", fontSize: 36 }]}>No connections</Text>
+        </View>
         :
         <ScrollView>
           {data.users.map((user, index) => {
             return (
-              <TouchableOpacity key={index} onPress={() => navigation.navigate('Chat', { name: user.fullName, id: user.id })} >
-                <CardSection>
-                  <Image style={styles.img} source={require('../../assets/blank-profile-picture.png')} />
-                  <Text style={[styles.bold, styles.center]}>{user.fullName}</Text>
-                  <View style={styles.iconContent}>
-                    {/* <Image style={styles.icon} source={require('../../assets/blank-profile-picture.png')} /> */}
-                    <Ionicons style={styles.icon} name='ios-arrow-forward' size={20} color='black' />
-                  </View>
-                </CardSection>
-              </TouchableOpacity>
+              <Card>
+                <TouchableOpacity key={index} onPress={() => navigation.navigate('Chat', { name: user.fullName, id: user.id })} >
+                  <CardSection>
+                    <Image style={styles.img} source={require('../../assets/blank-profile-picture.png')} />
+                    <Text style={[styles.bold, styles.center]}>{user.fullName}</Text>
+                    <View style={styles.iconContent}>
+                      {/* <Image style={styles.icon} source={require('../../assets/blank-profile-picture.png')} /> */}
+                      <Ionicons style={styles.icon} name='ios-arrow-forward' size={20} color='black' />
+                    </View>
+                  </CardSection>
+                </TouchableOpacity>
+              </Card>
             );
           })}
         </ScrollView>
@@ -66,6 +71,10 @@ var styles = StyleSheet.create({
     borderRadius: 40,
     margin: 10,
     backgroundColor: '#fff',
+  },
+  text: {
+    fontFamily: "HelveticaNeue",
+    color: "#52575D"
   },
   center: {
     fontSize: 22,
@@ -93,7 +102,12 @@ var styles = StyleSheet.create({
     marginTop: 20,
     //   width: 50,
     //   height: 50,
-  }
+  },
+  swipeInfoContainer: {
+    alignSelf: "center",
+    alignItems: "center",
+    marginTop: 16
+  },
 })
 
 const mapStateToProps = (state) => {

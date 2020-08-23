@@ -1,24 +1,30 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, ScrollView, Alert, Image, StyleSheet,
-  TouchableOpacity, TextInput, Dimensions, BackHandler,
+  TouchableOpacity, TextInput, Dimensions, BackHandler, Switch
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
+import Entypo from 'react-native-vector-icons/Entypo';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useIsFocused } from '@react-navigation/native';
 import ImagePicker from 'react-native-image-crop-picker';
 import BottomSheet from 'reanimated-bottom-sheet';
 import Animated from 'react-native-reanimated'
-import { uploadPhoto, removePhoto, loadUser } from '../../actions/index'
-import Card from '../../components/Card'
-import CardSection from '../../components/CardSection'
-// import { styles } from '../../styles/styles.js'
+import { uploadPhoto, removePhoto, loadUser, isActive } from '../../actions/index'
 import { connect } from 'react-redux';
 import { auth, db } from '../../config/firebase';
+import FloatingActionButton from '../../components/FloatingActionButton'
 
 const width = Dimensions.get('window').width;
+const height = Dimensions.get('window').height;
 
-const ProfileTab = ({ authenticate: { user, uid }, removePhoto, uploadPhoto }) => {
+const ProfileTab = ({ authenticate: { user, uid }, removePhoto, uploadPhoto, isActive }) => {
   const [data, setData] = useState(null);
+
+
+  const [isProfileImage, setProfileImage] = useState(false)
+
+  const [showFloatingButton, setShowFloatingButton] = useState(true) //finsih
 
   let unsubscribe = useRef(null);
   useEffect(() => {
@@ -68,8 +74,10 @@ const ProfileTab = ({ authenticate: { user, uid }, removePhoto, uploadPhoto }) =
       cropping: true,
       compressImageQuality: 0.7
     }).then(image => {
-      bs.current.snapTo(2);
-      uploadPhoto(image);
+      bs.current.snapTo(1);
+      uploadPhoto(image, isProfileImage);
+      setProfileImage(false);
+      setShowFloatingButton(true)
     });
   }
 
@@ -80,8 +88,10 @@ const ProfileTab = ({ authenticate: { user, uid }, removePhoto, uploadPhoto }) =
       cropping: true,
       compressImageQuality: 0.7
     }).then(image => {
-      bs.current.snapTo(2);
-      uploadPhoto(image);
+      bs.current.snapTo(1);
+      uploadPhoto(image, isProfileImage);
+      setProfileImage(false);
+      setShowFloatingButton(true)
     });
   }
 
@@ -103,7 +113,11 @@ const ProfileTab = ({ authenticate: { user, uid }, removePhoto, uploadPhoto }) =
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.panelButton}
-          onPress={() => bs.current.snapTo(2)}>
+          onPress={() => {
+            bs.current.snapTo(1)
+            setProfileImage(false);
+            setShowFloatingButton(true)
+          }}>
           <Text style={styles.panelButtonTitle}>Cancel</Text>
         </TouchableOpacity>
       </View>
@@ -120,46 +134,102 @@ const ProfileTab = ({ authenticate: { user, uid }, removePhoto, uploadPhoto }) =
     )
   }
 
+  console.log('fallign', fall)
+
   return (
     <View style={[styles.container]} >
+
       <BottomSheet
         ref={bs}
         callbackNode={fall}
-        snapPoints={[450, 300, 0]}
+        snapPoints={[320, 0]}
         renderContent={renderContent}
         renderHeader={renderHeader}
-        initialSnap={2}
+        initialSnap={1}
         enabledGestureInteraction={true}
       />
-      <Animated.View style={[{
-        opacity: Animated.add(0.4, Animated.multiply(fall, 1.0)),
-      }]}>
-        <Card>
-          <View>
-            {data && data.images.length > 0 ? <Image style={styles.img} source={{ uri: data.images[0].downloadURL }} />
-              : <Image style={styles.img} source={require('../../assets/blank-profile-picture.png')} />}
-            <Text style={[styles.center, styles.bold]} >{data && data.username}</Text>
-            {/* <CardSection> */}
-            <Text style={[styles.bold]} >{data && data.email}</Text>
-            {/* </CardSection> */}
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <Animated.View style={[{
+          opacity: Animated.add(0.4, Animated.multiply(fall, 1.0)),
+        }]}>
+          <View style={{ marginTop: 8, alignSelf: "center" }}>
+            <View style={styles.profileImage}>
+              {data && data.photo.downloadURL !== undefined ?
+                <Image source={{ uri: data.photo.downloadURL }} style={styles.image} resizeMode="cover"></Image> :
+                <Image source={require("../../assets/blank-profile-picture.png")} style={styles.image} resizeMode="center"></Image>
+              }
+            </View>
+            <View style={data && data.show ? styles.active : styles.notActive} />
+            <TouchableOpacity style={styles.add} onPress={() => {
+              setShowFloatingButton(false)
+              setProfileImage(true)
+              bs.current.snapTo(0);
+            }}>
+              <Ionicons name="ios-add" size={48} color="#DFD8C8" style={{ marginTop: 6, marginLeft: 4 }}></Ionicons>
+            </TouchableOpacity>
           </View>
-        </Card>
-        <View style={styles.imgRow}>
-          {data && data.images.length > 0 ? data.images.map((image, key) => {
-            return (
-              <TouchableOpacity key={{ key }} onPress={() => { removePhoto(image.id) }} >
-                <Image style={styles.img} source={{ uri: image.downloadURL }} />
-              </TouchableOpacity>
-            );
-          }) : null}
-          <TouchableOpacity style={[styles.img, styles.center]} onPress={() => {
-            bs.current.snapTo(0)
-          }}>
-            <Feather name="plus" size={75} style={styles.color} />
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
+          <View style={styles.infoContainer}>
+            <Text style={[styles.text, { fontWeight: "200", fontSize: 36 }]}>{data && data.fullName}</Text>
+            <Text style={[styles.text, { color: "#AEB5BC", fontSize: 14 }]}>Bio</Text>
+          </View>
+          {data ?
+            <View style={styles.ActiveContainer}>
+              <Text style={[styles.text, { marginLeft: 20, fontSize: 18 }]}>Active</Text>
+              <Switch style={[{ marginRight: 20 }]} value={data.show} onValueChange={(value) => { isActive(value) }} />
+            </View> : null
+          }
+          <View style={{ marginTop: 32 }}>
+            <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
+              {data && data.images.length > 0 ? data.images.map((image, key) => {
+                return (
+                  <View style={styles.mediaImageContainer}>
+                    <Image source={{ uri: image.downloadURL }} style={styles.image} resizeMode="cover"></Image>
+                    <View style={styles.remove}>
+                      <TouchableOpacity key={{ key }} onPress={() => { removePhoto(image.id) }} >
+                        <Entypo name="cross" size={20} color="#DFD8C8" style={{ marginTop: 2, marginLeft: 2 }}></Entypo>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              }) : [1, 2, 3].map((value, index) => {
+                return (
+                  <TouchableOpacity style={styles.mediaImageContainer} onPress={() => {
+                    bs.current.snapTo(0)
+                  }}>
+                    <Image source={require("../../assets/blank-profile-picture.png")} style={styles.image} resizeMode="cover"></Image>
+                    <TouchableOpacity style={styles.add2} onPress={() => {
 
+                      bs.current.snapTo(0)
+                    }}>
+                      <Ionicons name="ios-add" size={20} color="#DFD8C8" style={{ marginTop: 4, marginLeft: 2 }}></Ionicons>
+                    </TouchableOpacity>
+                  </TouchableOpacity>
+                );
+              })}
+              {data && data.images.length > 0 && data.images.length <= 2 ? <View style={styles.mediaImageContainer}>
+                <Image source={require("../../assets/blank-profile-picture.png")} style={styles.image} resizeMode="cover"></Image>
+                <TouchableOpacity style={styles.add2} onPress={() => {
+                  setShowFloatingButton(false)
+                  bs.current.snapTo(0)
+                }}>
+                  <Ionicons name="ios-add" size={20} color="#DFD8C8" style={{ marginTop: 4, marginLeft: 2 }}></Ionicons>
+                </TouchableOpacity>
+              </View> : null}
+            </ScrollView>
+            {data && data.images.length > 0 ?
+              <View style={styles.mediaCount}>
+                <Text style={[styles.text, { fontSize: 24, color: "#DFD8C8", fontWeight: "300" }]}>{data.images.length}/3</Text>
+                <Text style={[styles.text, { fontSize: 12, color: "#DFD8C8", textTransform: "uppercase" }]}>avail slots</Text>
+              </View> :
+              null
+            }
+
+          </View>
+        </Animated.View>
+      </ScrollView>
+      {isFocused && showFloatingButton ?
+        <FloatingActionButton /> : null
+      }
     </View >
   )
 }
@@ -167,6 +237,108 @@ const ProfileTab = ({ authenticate: { user, uid }, removePhoto, uploadPhoto }) =
 let styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#FFF"
+  },
+  profileImage: {
+    width: 180,
+    height: 180,
+    borderRadius: 100,
+    overflow: "hidden"
+  },
+  image: {
+    flex: 1,
+    height: undefined,
+    width: undefined
+  },
+  active: {
+    backgroundColor: "#34FFB9",
+    position: "absolute",
+    bottom: 28,
+    left: 10,
+    padding: 4,
+    height: 20,
+    width: 20,
+    borderRadius: 10
+  },
+  notActive: {
+    backgroundColor: "#e74c3c",
+    position: "absolute",
+    bottom: 28,
+    left: 10,
+    padding: 4,
+    height: 20,
+    width: 20,
+    borderRadius: 10
+  },
+  add: {
+    backgroundColor: "#41444B",
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  add2: {
+    backgroundColor: "#41444B",
+    position: "absolute",
+    top: 0,
+    right: 0,
+    width: 40,
+    height: 40,
+    borderRadius: 30,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  remove: {
+    backgroundColor: "#41444B",
+    position: "absolute",
+    top: 0,
+    right: 0,
+    width: 40,
+    height: 40,
+    borderRadius: 30,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  infoContainer: {
+    alignSelf: "center",
+    alignItems: "center",
+    marginTop: 16
+  },
+  ActiveContainer: {
+    flexDirection: 'row',
+    marginTop: 8,
+    justifyContent: 'space-between'
+  },
+  mediaImageContainer: {
+    width: 200,
+    height: 150,
+    borderRadius: 12,
+    overflow: "hidden",
+    marginHorizontal: 10
+  },
+  mediaCount: {
+    backgroundColor: "#41444B",
+    position: "absolute",
+    top: "50%",
+    marginTop: -100,
+    marginLeft: 20,
+    width: 80,
+    height: 80,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 12,
+    shadowColor: "rgba(0, 0, 0, 0.38)",
+    shadowOffset: { width: 0, height: 10 },
+    shadowRadius: 20,
+    shadowOpacity: 1
+  },
+  text: {
+    fontFamily: "HelveticaNeue",
+    color: "#52575D"
   },
   color: {
     color: '#df4723'
@@ -220,6 +392,7 @@ let styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 5,
     shadowOpacity: 0.4,
+    // height: height / 1.5
   },
   header: {
     backgroundColor: '#05375a',
@@ -274,4 +447,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps, { uploadPhoto, removePhoto, loadUser })(ProfileTab)
+export default connect(mapStateToProps, { uploadPhoto, removePhoto, loadUser, isActive })(ProfileTab)
