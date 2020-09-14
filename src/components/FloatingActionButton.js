@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 
-const FloatingActionButton = () => {
+const FloatingActionButton = (props) => {
 
 
   let state = {
@@ -92,7 +92,7 @@ const FloatingActionButton = () => {
     <View style={styles.container}>
       <Animated.View style={[styles.background, bgStyle]} />
 
-      <TouchableWithoutFeedback>
+      <TouchableWithoutFeedback onPress={() => { props.navigation.navigate('Swipe'); }}>
         <Animated.View style={[styles.button, styles.other, swipeStyle]}>
           <Animated.Text style={[styles.label, labelStyle]}>Swipe</Animated.Text>
           <MaterialCommunityIcons style={styles.icon} name='gesture-swipe' size={20} color='black' />
@@ -161,5 +161,6 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   }
 });
+
 
 export default FloatingActionButton;

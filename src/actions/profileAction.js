@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import firebase from 'firebase';
 import { db } from '../config/firebase';
+import Geohash from 'latlon-geohash'
 
 export const uploadPhoto = (image, isProfile) => {
     return async (dispatch, getState) => {
@@ -79,3 +80,52 @@ export const isActive = (active) => {
         }
     }
 }
+
+export const updateLocation = (location) => {
+    return async (dispatch, getState) => {
+        try {
+            const user = getState().auth.uid;
+            const profile = getState().auth.user;
+
+            console.log('profile', typeof profile.distance);
+            console.log('profile location', location);
+            let geoHash = Geohash.encode(location.latitude, location.longitude, 4)
+            console.log('geoHash', geoHash)
+            await db.collection('users').doc(user).set(
+                {
+                    geocode: geoHash,
+                    latlng: location
+                },
+                { merge: true }
+            );
+
+        } catch (e) {
+            console.error(e)
+        }
+    }
+}
+
+export const updateDistance = (distance) => {
+    return async (dispatch, getState) => {
+        try {
+            // const user = getState().auth.uid;
+            // const profile =  getState().auth.user;
+
+            // console.log('profile',profile);
+
+            // let geoHash = Geohash.encode(location.latitude, location.longitude, distance)
+
+            // await db.collection('users').doc(user).set(
+            //     {
+            //         geocode: geoHash,
+            //         latlng: location
+            //     },
+            //     { merge: true }
+            // );
+
+        } catch (e) {
+            console.error(e)
+        }
+    }
+}
+

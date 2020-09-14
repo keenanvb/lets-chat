@@ -142,7 +142,6 @@ const App = () => {
 
 
   const createChatStack = (props) => {
-    console.log('props', props);
     return (<Stack.Navigator    >
       <Stack.Screen
         name="Connections"

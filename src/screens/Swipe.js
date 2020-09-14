@@ -9,10 +9,14 @@ import {
   Dimensions,
   ActivityIndicator
 } from "react-native";
+import LottieView from 'lottie-react-native';
+import * as Animatable from 'react-native-animatable';
 import { connect } from 'react-redux';
 import { db } from '../config/firebase';
 import { createChatId } from '../utils/utils'
 import firebase from 'firebase'
+import Card from '../components/Card'
+import CardSection from '../components/CardSection'
 
 function clamp(value, min, max) {
   return min < max
@@ -28,25 +32,36 @@ const SWIPE_THRESHOLD = 0.5 * SCREEN_WIDTH;
 
 
 const Swipe = ({ authenticate }) => {
-
-  const [users, setUsers] = useState([]);
+  console.log('authenticate', authenticate)
+  const [users, setUsers] = useState(null);
+  const [yesLoading, setYesLoading] = useState(false)
 
   useEffect(() => {
-    db.collection('users').get().then(snapShot => {
+
+    const start = authenticate.user.geocode
+    const end = start + '~'
+    // db.collection('users').where('geocode', '==', authenticate.user.geocode).get().then(snapShot => {
+    db.collection('users').orderBy('geocode').startAt(start).endAt(end).get().then(snapShot => {
       let userList = [];
       snapShot.forEach((doc) => {
         let data = doc.data();
-        if (data.uid !== authenticate.uid && data.swipes[authenticate.uid] === false || data.swipes[authenticate.uid] === undefined) {
-          // if (data.uid !== authenticate.uid) {
+        // if (data.uid !== authenticate.uid && data.swipes[authenticate.uid] === false || data.swipes[authenticate.uid] === undefined) {
+        //test
+        if (data.uid !== authenticate.uid) {
           userList.push(data);
         }
 
       });
       setUsers(userList);
+
+      //Testing
+      // setUsers(0)
     });
+
+
   }, []);
 
-  console.log('swipe users', users);
+  // console.log('swipe users', users);
 
   const state = {
     animation: new Animated.ValueXY(),
@@ -58,8 +73,7 @@ const Swipe = ({ authenticate }) => {
 
 
   const checkMatch = async () => {
-    console.log('checking match')
-    console.log('authenticate.uid', authenticate.uid);
+    console.log('authenticate.uid', authenticate);
     console.log('checking match', currentCard.swipes[authenticate.uid])
     try {
       if (authenticate.user.swipes[currentCard.uid] === true) {
@@ -100,7 +114,7 @@ const Swipe = ({ authenticate }) => {
         await db.collection('chats').doc(createChatId(authenticate.uid, currentCard.uid)).set(chat);
       }
     } catch (e) {
-      console.log('e', e)
+      console.log('checkMatch error', e)
     }
 
   }
@@ -175,6 +189,7 @@ const Swipe = ({ authenticate }) => {
       state.next.setValue(0.9);
       state.opacity.setValue(1);
       state.animation.setValue({ x: 0, y: 0 });
+      setYesLoading(false)
     });
   };
 
@@ -195,6 +210,7 @@ const Swipe = ({ authenticate }) => {
 
 
   const handleFirebaseYes = async () => {
+    setYesLoading(true)
     await db.collection('users').doc(currentCard.uid).update({
       [`swipes.${authenticate.uid}`]: true
     });
@@ -203,9 +219,11 @@ const Swipe = ({ authenticate }) => {
 
 
   const handleFirebaseNo = async () => {
-    await db.collection('users').doc(currentCard.uid).update({
-      [`swipes.${authenticate.uid}`]: false
-    });
+    // await db.collection('users').doc(currentCard.uid).update({
+    //   [`swipes.${authenticate.uid}`]: false
+    // });
+    setYesLoading(true)
+    console.log('thats a no')
   }
 
 
@@ -253,62 +271,89 @@ const Swipe = ({ authenticate }) => {
     opacity,
   };
 
+  if (users === null) {
+    return (
+      <LottieView source={require('./loader.json')} autoPlay loop />
+    );
+  }
+
+
   return (
     <View style={styles.container}>
-      <View style={styles.top}>
-        {users.slice(0, 2).reverse().map(({ images, id, email }, index, items) => {
-          const isLastItem = index === items.length - 1;
-          const isSecondToLast = index === items.length - 2;
-          const panHandlers = isLastItem ? _panResponder.panHandlers : {};
-          const cardStyle = isLastItem ? animatedCardStyles : undefined;
-          const imageStyle = isLastItem ? animatedImageStyles : undefined;
-          const nextStyle = isSecondToLast
-            ? { transform: [{ scale: state.next }] }
-            : undefined;
+      {yesLoading ?
+        <LottieView source={require('./like.json')} autoPlay loop /> :
+        <>
+          {users.length > 0 ?
+            <>
+              <View style={styles.top}>
+                {users.slice(0, 2).reverse().map(({ photo, id, email }, index, items) => {
+                  const isLastItem = index === items.length - 1;
+                  const isSecondToLast = index === items.length - 2;
+                  const panHandlers = isLastItem ? _panResponder.panHandlers : {};
+                  const cardStyle = isLastItem ? animatedCardStyles : undefined;
+                  const imageStyle = isLastItem ? animatedImageStyles : undefined;
+                  const nextStyle = isSecondToLast
+                    ? { transform: [{ scale: state.next }] }
+                    : undefined;
 
 
-          if (items.length === 1) {
-            currentCard = items[0];
-          } else {
-            currentCard = items[1];
-          }
+                  if (items.length === 1) {
+                    currentCard = items[0];
+                  } else {
+                    currentCard = items[1];
+                  }
 
-          console.log('currentCard', currentCard);
-          return (
-            <Animated.View {...panHandlers} style={[styles.card, cardStyle, nextStyle]} key={`${index}-${id}`}>
-              <Animated.Image
-                source={{ uri: images[0].downloadURL }}
-                style={[styles.image, imageStyle]}
-                resizeMode="cover"
-              />
-              <View style={styles.lowerText}>
-                <Text>
-                  {email}
-                </Text>
+                  // console.log('currentCard', currentCard);
+                  return (
+                    <Animated.View {...panHandlers} style={[styles.card, cardStyle, nextStyle]} key={`${index}-${id}`}>
+                      <Animated.Image
+                        source={{ uri: photo.downloadURL }}
+                        style={[styles.image, imageStyle]}
+                        resizeMode="cover"
+                      />
+                      <View style={styles.lowerText}>
+                        <Text>
+                          {email}
+                        </Text>
+                      </View>
+
+                      {isLastItem &&
+                        <Animated.View style={[styles.nope, animatedNopeStyles]}>
+                          <Text style={styles.nopeText}>Nope!</Text>
+                        </Animated.View>}
+
+                      {isLastItem &&
+                        <Animated.View style={[styles.yup, animatedYupStyles]}>
+                          <Text style={styles.yupText}>Yup!</Text>
+                        </Animated.View>}
+                    </Animated.View>
+                  );
+                })}
               </View>
+              <View style={styles.buttonBar}>
+                <TouchableOpacity onPress={handleNo} style={[styles.button, styles.nopeButton]}>
+                  <Text style={styles.nopeText}>NO</Text>
+                </TouchableOpacity>
 
-              {isLastItem &&
-                <Animated.View style={[styles.nope, animatedNopeStyles]}>
-                  <Text style={styles.nopeText}>Nope!</Text>
-                </Animated.View>}
-
-              {isLastItem &&
-                <Animated.View style={[styles.yup, animatedYupStyles]}>
-                  <Text style={styles.yupText}>Yup!</Text>
-                </Animated.View>}
-            </Animated.View>
-          );
-        })}
-      </View>
-      <View style={styles.buttonBar}>
-        <TouchableOpacity onPress={handleNo} style={[styles.button, styles.nopeButton]}>
-          <Text style={styles.nopeText}>NO</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={handleYes} style={[styles.button, styles.yupButton]}>
-          <Text style={styles.yupText}>YES</Text>
-        </TouchableOpacity>
-      </View>
+                <TouchableOpacity onPress={handleYes} style={[styles.button, styles.yupButton]}>
+                  <Text style={styles.yupText}>YES</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+            :
+            <>
+              <LottieView source={require('./like.json')} autoPlay loop />
+              <Animatable.View
+                animation="fadeIn"
+              >
+                <View style={styles.InfoContainer}>
+                  <Text style={[styles.text, { fontWeight: "200", fontSize: 36 }]}>No More Connections</Text>
+                </View>
+              </Animatable.View>
+            </>
+          }
+        </>
+      }
     </View>
   );
 
@@ -347,7 +392,8 @@ const styles = StyleSheet.create({
   },
   card: {
     width: 400,
-    height: 400,
+    height: 500,
+    paddingVertical: 50,
     position: "absolute",
     borderRadius: 3,
     shadowColor: "#000",
@@ -395,6 +441,15 @@ const styles = StyleSheet.create({
   nopeText: {
     fontSize: 16,
     color: "red",
+  },
+  InfoContainer: {
+    alignSelf: "center",
+    alignItems: "center",
+    marginTop: 16
+  },
+  text: {
+    fontFamily: "HelveticaNeue",
+    color: "#52575D"
   },
 });
 

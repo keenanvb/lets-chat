@@ -1,14 +1,18 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { connect } from 'react-redux';
 import { Text, View, StyleSheet, StatusBar, Dimensions, TouchableOpacity } from 'react-native'
+import LottieView from 'lottie-react-native';
 import * as Animatable from 'react-native-animatable'
 import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Slides from '../components/Slides';
 import { auth } from '../config/firebase';
 import { loadUser } from '../actions/index';
+import AsyncStorage from '@react-native-community/async-storage'
 import store from '../store';
 const Splash = ({ authenticate, navigation }) => {
+
+    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         auth.onAuthStateChanged(async (user) => {
@@ -17,9 +21,11 @@ const Splash = ({ authenticate, navigation }) => {
                 navigation.navigate('Top Tabs');
             } else {
                 console.log('no user logged in')
+                await getIntroData()
             }
         }, (error) => {
             console.log('error', error);
+            setLoading(false)
         });
 
     }, []);
@@ -36,33 +42,66 @@ const Splash = ({ authenticate, navigation }) => {
         navigation.navigate('Login');
     }
 
+    const handlePress = async () => {
+        await AsyncStorage.setItem('intro', 'finished');
+        navigation.navigate('Login')
+    }
+
+    const getIntroData = async () => {
+        try {
+            let res = await AsyncStorage.getItem('intro');
+            if (res) {
+                navigation.navigate('Login')
+            } else {
+                setLoading(false)
+            }
+        } catch (e) {
+            console.log('e', e)
+            console.log('e', e)
+            // read error
+        }
+
+        console.log('Done.')
+
+    }
+
     return (
         <View style={container}>
             <StatusBar barStyle="light-content" />
-            <Slides data={slideData} onComplete={onSLidesComplete} />
-            <View style={header}>
-                <Animatable.Image
-                    animation="bounceIn"
-                    duration={1500}
-                    source={require('../assets/map.png')}
-                    style={logo}
-                    resizeMode={"stretch"}
-                />
-            </View>
-            <Animatable.View
-                animation="fadeInUpBig"
-                style={footer}>
-                <Text style={title}>Stay connected with us</Text>
-                <Text style={text}>Sign in with account</Text>
-                <View style={button}>
-                    <TouchableOpacity onPress={() => { navigation.navigate('Login') }}>
-                        <LinearGradient colors={['#05375a', '#05375a']} style={signIn}>
-                            <Text style={textSignIn}>Get started</Text>
-                            <Ionicons name='ios-arrow-forward' size={20} color='white' />
-                        </LinearGradient>
-                    </TouchableOpacity>
-                </View>
-            </Animatable.View>
+            {loading ?
+                <LottieView source={require('./loader.json')} autoPlay loop />
+                :
+                <>
+                    <Slides data={slideData} onComplete={onSLidesComplete} />
+                    <View style={header}>
+                        <Animatable.Image
+                            animation="bounceIn"
+                            duration={1500}
+                            source={require('../assets/map.png')}
+                            style={logo}
+                            resizeMode={"stretch"}
+                        />
+                    </View>
+                    <Animatable.View
+                        animation="fadeInUpBig"
+                        style={footer}>
+                        <Text style={title}>Stay connected with us</Text>
+                        <Text style={text}>Sign in with account</Text>
+                        <View style={button}>
+                            <TouchableOpacity onPress={async () => {
+                                await AsyncStorage.setItem('intro', 'finished');
+                                navigation.navigate('Login')
+                                // handlePress();
+                            }}>
+                                <LinearGradient colors={['#05375a', '#05375a']} style={signIn}>
+                                    <Text style={textSignIn}>Get started</Text>
+                                    <Ionicons name='ios-arrow-forward' size={20} color='white' />
+                                </LinearGradient>
+                            </TouchableOpacity>
+                        </View>
+                    </Animatable.View>
+                </>
+            }
         </View>
     )
 }

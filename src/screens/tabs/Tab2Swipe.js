@@ -2,8 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
   SafeAreaView, Modal, TouchableHighlight, TextInput,
-  Platform, Image, ScrollView
+  Platform, Image, ScrollView, Keyboard
 } from 'react-native';
+import { connect } from 'react-redux';
+import { updateLocation } from '../../actions/index'
 import MapView, { PROVIDER_GOOGLE, Marker, Callout } from 'react-native-maps';
 import Card from '../../components/Card'
 import CardSection from '../../components/CardSection'
@@ -15,19 +17,38 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Geolocation from '@react-native-community/geolocation';
 import { request, PERMISSIONS } from 'react-native-permissions';
+import * as Animatable from 'react-native-animatable';
 // import FloatingActionButton from '../../components/FloatingActionButton'
 
-const SwipeTab = ({ navigation }) => {
-  const mapRef = useRef()
+const SwipeTab = ({ authenticate: { user, uid }, navigation, updateLocation }) => {
+  const mapRef = useRef(null)
   const isFocused = useIsFocused();
   const [showModal, setShowModal] = useState(false);
-  const [location, getLocation] = useState({
+  const [location, setLocation] = useState({
     latitude: 0,
     longitude: 0,
   });
 
-  const [predictions, getPredictions] = useState([]);
-  const [destination, getDestination] = useState('');
+  const [predictions, setPredictions] = useState([]);
+  const [destination, setDestination] = useState('');
+
+  const [displaySettings, setDisplaySettings] = useState(
+    {
+      displayInterest: false,
+      displayCurrentLocation: false,
+      displayMaxDistance: false,
+      displayAgeRange: false,
+      displayShowMe: false
+    }
+  );
+
+  const changeDisplaySettings = (key) => {
+    setDisplaySettings({
+      ...displaySettings,
+      [key]: !displaySettings[key]
+    })
+  }
+
 
   const goToSwipe = () => {
     navigation.navigate('Swipe');
@@ -37,73 +58,52 @@ const SwipeTab = ({ navigation }) => {
     (async () => {
       if (Platform.OS === 'ios') {
         let response = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-        console.log('Iphone response', response);
-        if (response == 'granted') {
+        if (response === 'granted') {
           locateCurrentPosition()
         }
       }
 
       if (Platform.OS === 'android') {
         let response = await request(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
-        console.log('android response', response);
-        if (response == 'granted') {
+        if (response === 'granted') {
           locateCurrentPosition()
         }
       }
     })();
   }, []);
 
-  // const requestLocationPermissions = async () => {
-  //   if (Platform.OS === 'ios') {
-  //     let response = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-  //     // Geolocation.requestAuthorization();
-  //     // Geolocation.setRNConfiguration({
-  //     //   skipPermissionRequests: false,
-  //     //   authorizationLevel: 'whenInUse',
-  //     // });
-  //     console.log('Iphone response', response);
-  //     if (response == 'granted') {
-  //       locateCurrentPosition()
-  //     }
-  //   }
-
-  //   if (Platform.OS === 'android') {
-  //     let response = await request(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
-  //     // await PermissionsAndroid.request(
-  //     //   PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-  //     // );
-  //     if (response == 'granted') {
-  //       locateCurrentPosition()
-  //     }
-  //   }
-  // }
-
-  const locateCurrentPosition = () => {
+  const locateCurrentPosition = (findMe) => {
     Geolocation.getCurrentPosition(position => {
       const {
         coords: { latitude, longitude }
       } = position;
 
-      getLocation({ latitude: latitude, longitude: longitude });
-      console.log('latitude', latitude);
-      console.log('longitude', longitude);
+      setLocation({ latitude: latitude, longitude: longitude });
+
+      if (findMe) {
+        mapRef.current.animateToRegion({
+          latitude: latitude, longitude: longitude,
+          latitudeDelta: 0.1,
+          longitudeDelta: 0.1
+        }, 300);
+      }
     });
   }
 
   let onRegionChange = (region) => {
-    // console.log('region', region);
+    // setLocation({ latitude: region.latitude, longitude: region.longitude });
   };
 
 
   const callAPI = _.debounce(async () => {
-    const { latitude, longitude } = getLocation;
+    const { latitude, longitude } = setLocation;
 
     try {
-      const api = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=GOOGLE_API_KEY&input=${destination}&location=${latitude},${longitude}&radius=2000`;
+      const api = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=GOOGLE_API_KEY&input=${destination}&location=${latitude},${longitude}&radius=20000`;
       let res = await axios.get(api);
 
       let data = res.data.predictions;
-      getPredictions(data);
+      setPredictions(data);
     } catch (err) {
       console.log('err', err);
     }
@@ -112,19 +112,35 @@ const SwipeTab = ({ navigation }) => {
   const { longitude, latitude } = location;
 
   const onChangeDestination = async (text) => {
-    getDestination(text);
+    setDestination(text);
     await callAPI();
   };
+
+  const handleUpdateLocation = () => {
+    setShowModal(!showModal)
+
+    updateLocation(location)
+  }
 
   const predictionList = predictions.map(prediction => {
     return (
       <TouchableHighlight
-        // onPress={() => {
-        //   getRouteDirections(
-        //     prediction.place_id,
-        //     prediction.structured_formatting.main_text,
-        //   );
-        // }}
+        onPress={async () => {
+          let api = `https://maps.googleapis.com/maps/api/geocode/json?address=${prediction.description}&key=GOOGLE_API_KEY`
+          let res = await axios.get(api);
+          const { formatted_address, geometry } = res.data.results[0]
+          console.log('formatted_address', formatted_address)
+          console.log('geometry', geometry)
+          setDestination(formatted_address);
+          setPredictions([]);
+          Keyboard.dismiss();
+          setLocation({ latitude: geometry.location.lat, longitude: geometry.location.lng });
+          mapRef.current.animateToRegion({
+            latitude: geometry.location.lat, longitude: geometry.location.lng,
+            latitudeDelta: 0.1,
+            longitudeDelta: 0.1
+          }, 300);
+        }}
         key={prediction.id}>
         <View>
           <Text style={styles.suggestions}>{prediction.description}</Text>
@@ -161,7 +177,7 @@ const SwipeTab = ({ navigation }) => {
             <Marker coordinate={{ latitude, longitude }}>
               {/* <Image source={require('../../assets/blank-profile-picture.png')} /> */}
               <Callout>
-                <Text>That's Me</Text>
+                <Text>Yup im here now</Text>
               </Callout>
             </Marker>
           </MapView>
@@ -173,9 +189,27 @@ const SwipeTab = ({ navigation }) => {
           />
 
           <View style={styles.button}>
-            <TouchableOpacity onPress={() => { setShowModal(!showModal) }}>
+            <TouchableOpacity style={{ marginBottom: 10 }} onPress={() => {
+              handleUpdateLocation()
+
+
+            }}>
               <LinearGradient colors={['#05375a', '#05375a']} style={styles.signIn}>
                 <Text style={styles.textSignIn}>Update Location</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            {/* <TouchableOpacity style={{ marginBottom: 10 }} onPress={() => {
+              locateCurrentPosition(true);
+              // setShowModal(!showModal) 
+
+            }}>
+              <LinearGradient colors={['#05375a', '#05375a']} style={styles.signIn}>
+                <Text style={styles.textSignIn}>Find me</Text>
+              </LinearGradient>
+            </TouchableOpacity> */}
+            <TouchableOpacity onPress={() => { setShowModal(!showModal) }}>
+              <LinearGradient colors={['#05375a', '#05375a']} style={styles.signIn}>
+                <Text style={styles.textSignIn}>Cancel</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -200,67 +234,130 @@ const SwipeTab = ({ navigation }) => {
     )
   }
 
+  const { displayInterest, displayCurrentLocation, displayMaxDistance, displayAgeRange, displayShowMe } = displaySettings
+
   return (
     <View style={[styles.container]} >
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.swipeInfoContainer}>
+        {/* <View style={styles.swipeInfoContainer}>
           <Text style={[styles.text, { fontWeight: "200", fontSize: 36 }]}>Swipe Settings</Text>
-        </View>
-        <Card>
+        </View> */}
+        {/* <Card>
           <TouchableOpacity >
             <CardSection>
               <Text style={[styles.bold, styles.text, styles.center]}>Interested in</Text>
               <View style={styles.iconContent}>
-                {/* <Image style={styles.icon} source={require('../../assets/blank-profile-picture.png')} /> */}
                 <Ionicons style={styles.icon} name='ios-arrow-forward' size={20} color='black' />
               </View>
             </CardSection>
           </TouchableOpacity>
-        </Card>
+        </Card> */}
         <Card>
-          <TouchableOpacity onPress={() => setShowModal(!showModal)}>
+          <TouchableOpacity onPress={() => changeDisplaySettings('displayCurrentLocation')
+          }>
             <CardSection>
-              <Text style={[styles.bold, styles.text, styles.center]}>Set current location</Text>
+              <Text style={[styles.bold, styles.text, styles.center]}>Current location</Text>
               <View style={styles.iconContent}>
-                {/* <Image style={styles.icon} source={require('../../assets/blank-profile-picture.png')} /> */}
                 <Ionicons style={styles.icon} name='ios-arrow-forward' size={20} color='black' />
               </View>
             </CardSection>
           </TouchableOpacity>
         </Card>
+        {displayCurrentLocation ?
+          <Animatable.View
+            animation="fadeIn"
+          >
+            <Card >
+              <TouchableOpacity onPress={() => {
+                setShowModal(!showModal)
+              }}>
+                <CardSection>
+                  <View style={{ borderBottomColor: '#05375a', marginLeft: 10 }}>
+                    <Text> Change location!</Text>
+                  </View>
+                </CardSection>
+              </TouchableOpacity>
+            </Card>
+          </Animatable.View>
+          : null}
         <Card>
-          <TouchableOpacity  >
+          <TouchableOpacity onPress={() => { changeDisplaySettings('displayMaxDistance') }} >
             <CardSection>
               <Text style={[styles.bold, styles.text, styles.center]}>Maximum distance</Text>
               <View style={styles.iconContent}>
-                {/* <Image style={styles.icon} source={require('../../assets/blank-profile-picture.png')} /> */}
-                <Ionicons style={styles.icon} name='ios-arrow-forward' size={20} color='black' />
+                {displayMaxDistance ? <Ionicons style={styles.icon} name='ios-arrow-down' size={20} color='black' /> :
+                  <Ionicons style={styles.icon} name='ios-arrow-forward' size={20} color='black' />
+                }
               </View>
             </CardSection>
           </TouchableOpacity>
         </Card>
+        {displayMaxDistance ?
+          <Animatable.View
+            animation="fadeIn"
+
+          >
+            <Card >
+              <CardSection>
+                <View style={{ borderBottomColor: '#05375a', marginLeft: 10 }}>
+                  <Text>Maximum distance</Text>
+                </View>
+              </CardSection>
+            </Card>
+          </Animatable.View>
+          : null}
         <Card>
-          <TouchableOpacity  >
+          <TouchableOpacity onPress={() => { changeDisplaySettings('displayShowMe') }}>
             <CardSection>
               <Text style={[styles.bold, styles.text, styles.center]}>Show Me</Text>
               <View style={styles.iconContent}>
-                {/* <Image style={styles.icon} source={require('../../assets/blank-profile-picture.png')} /> */}
-                <Ionicons style={styles.icon} name='ios-arrow-forward' size={20} color='black' />
+                {displayShowMe ? <Ionicons style={styles.icon} name='ios-arrow-down' size={20} color='black' /> :
+                  <Ionicons style={styles.icon} name='ios-arrow-forward' size={20} color='black' />
+                }
               </View>
             </CardSection>
           </TouchableOpacity>
         </Card>
+        {displayShowMe ?
+          <Animatable.View
+            animation="fadeIn"
+
+          >
+            <Card >
+              <CardSection>
+                <View style={{ borderBottomColor: '#05375a', marginLeft: 10 }}>
+                  <Text>Show Me</Text>
+                </View>
+              </CardSection>
+            </Card>
+          </Animatable.View>
+          : null}
         <Card>
-          <TouchableOpacity  >
+          <TouchableOpacity onPress={() => { changeDisplaySettings('displayAgeRange') }}>
             <CardSection>
               <Text style={[styles.bold, styles.text, styles.center]}>Age range</Text>
               <View style={styles.iconContent}>
-                {/* <Image style={styles.icon} source={require('../../assets/blank-profile-picture.png')} /> */}
-                <Ionicons style={styles.icon} name='ios-arrow-forward' size={20} color='black' />
+                {displayAgeRange ? <Ionicons style={styles.icon} name='ios-arrow-down' size={20} color='black' /> :
+                  <Ionicons style={styles.icon} name='ios-arrow-forward' size={20} color='black' />
+                }
               </View>
             </CardSection>
           </TouchableOpacity>
         </Card>
+        {displayAgeRange ?
+          <Animatable.View
+            animation="fadeIn"
+
+          >
+            <Card >
+              <CardSection>
+                <View style={{ borderBottomColor: '#05375a', marginLeft: 10 }}>
+                  <Text>Age range</Text>
+                </View>
+              </CardSection>
+            </Card>
+          </Animatable.View>
+          : null}
         <Card>
           <TouchableOpacity onPress={() => goToSwipe()}>
             <CardSection>
@@ -394,4 +491,13 @@ const styles = StyleSheet.create({
   }
 });
 
-export default SwipeTab;
+// export default SwipeTab;
+
+
+const mapStateToProps = (state) => {
+  return {
+    authenticate: state.auth
+  }
+}
+
+export default connect(mapStateToProps, { updateLocation })(SwipeTab)

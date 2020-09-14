@@ -3,6 +3,12 @@ import { setAlert } from './index'
 import { auth, db } from '../config/firebase'
 import firebase from 'firebase'
 import { REGISTER_SUCCESS, REGISTER_FAIL, USER_LOADED, AUTH_ERROR, LOGIN_SUCCESS, LOGIN_FAIL, LOG_OUT } from './types';
+import Geolocation from '@react-native-community/geolocation';
+import { request, PERMISSIONS } from 'react-native-permissions';
+import {
+    Platform
+} from 'react-native';
+import Geohash from 'latlon-geohash'
 // import setAuthToken from '../utils/setAuthToken'
 
 //Load user
@@ -43,8 +49,9 @@ export const registerWithEmailAndPassword = ({ fullName, email, password }, navi
     return async (dispatch) => {
         try {
             let response = await auth.createUserWithEmailAndPassword(email, password);
-
-            if (response.user.uid) {
+            let location = await requestLocationPermissions()
+            let geoHash = Geohash.encode(location.latitude, location.longitude, 1)
+            if (response.user.uid && location) {
                 const user = {
                     uid: response.user.uid,
                     email,
@@ -55,7 +62,9 @@ export const registerWithEmailAndPassword = ({ fullName, email, password }, navi
                     images: [],
                     show: false,
                     report: [],
-                    geocode: '',
+                    geocode: geoHash,
+                    latlng: location,
+                    distance: 4,
                     swipes: {
                         [response.user.uid]: false
                     },
@@ -140,3 +149,39 @@ export const resetPassword = (email, navigation) => {
         }
     }
 }
+
+const locateCurrentPosition = () => {
+    return new Promise((resolve, reject) => {
+        Geolocation.getCurrentPosition((position) => {
+            const { coords: { latitude, longitude } } = position;
+            if (position) {
+                resolve({
+                    latitude,
+                    longitude
+                })
+            } else {
+                reject(null);
+            }
+
+        });
+
+
+    })
+}
+
+const requestLocationPermissions = async () => {
+    if (Platform.OS === 'ios') {
+        let response = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+        if (response === 'granted') {
+            return await locateCurrentPosition()
+        }
+    }
+
+    if (Platform.OS === 'android') {
+        let response = await request(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
+        if (response === 'granted') {
+            return await locateCurrentPosition()
+        }
+    }
+}
+
