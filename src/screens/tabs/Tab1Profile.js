@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  View, Text, ScrollView, Alert, Image, StyleSheet,
-  TouchableOpacity, TextInput, Dimensions, BackHandler, Switch
+  View, Text, ScrollView, Alert, Image, StyleSheet, Modal,
+  TouchableOpacity, TextInput, Dimensions, BackHandler, TouchableHighlight, Switch, SafeAreaView
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import LottieView from 'lottie-react-native';
@@ -11,36 +11,65 @@ import { useIsFocused } from '@react-navigation/native';
 import ImagePicker from 'react-native-image-crop-picker';
 import BottomSheet from 'reanimated-bottom-sheet';
 import Animated from 'react-native-reanimated'
-import { uploadPhoto, removePhoto, loadUser, isActive } from '../../actions/index'
+import { uploadPhoto, removePhoto, loadUser, isActive, getCurrentProfile } from '../../actions/index'
 import { connect } from 'react-redux';
 import { auth, db } from '../../config/firebase';
 import FloatingActionButton from '../../components/FloatingActionButton'
 import * as Animatable from 'react-native-animatable';
+import Input from '../../components/Input'
+import LinearGradient from 'react-native-linear-gradient';
 
 const width = Dimensions.get('window').width;
 const height = Dimensions.get('window').height;
 
-const ProfileTab = ({ authenticate: { user, uid }, removePhoto, uploadPhoto, isActive, navigation }) => {
+const ProfileTab = ({ authenticate: { user, uid }, profile: { profile, loading }, getCurrentProfile, removePhoto, uploadPhoto, isActive, navigation }) => {
   const [data, setData] = useState(null);
 
-
+  const [showModal, setShowModal] = useState(false);
   const [isProfileImage, setProfileImage] = useState(false)
 
   const [showFloatingButton, setShowFloatingButton] = useState(true) //finsih
 
+  const [formData, setFormData] = useState({
+    company: '',
+    location: '',
+    bio: '',
+    job: '',
+    twitter: '',
+    facebook: '',
+    linkedin: '',
+    youtube: '',
+    instagram: ''
+  });
+  console.log('profile', profile)
   let unsubscribe = useRef(null);
   useEffect(() => {
+    getCurrentProfile()
     unsubscribe.current = db.collection('users').doc(uid).onSnapshot(snap => {
       const snapData = snap.data();
       setData(snapData);
     });
+
+    setFormData({
+      // company: data || data.company ? data.company : '',
+      job: loading || !profile.job ? '' : profile.job,
+      bio: loading || !profile.bio ? '' : profile.bio,
+      company: loading || !profile.company ? '' : profile.company,
+      // website: loading || !profile.website ? '' : profile.website,
+      // twitter: loading || !profile.social ? '' : profile.social.twitter,
+      // facebook: loading || !profile.social ? '' : profile.social.facebook,
+      // linkedin: loading || !profile.social ? '' : profile.social.linkedin,
+      // youtube: loading || !profile.social ? '' : profile.social.youtube,
+      // instagram: loading || !profile.social ? '' : profile.social.instagram
+    })
+
     // BackHandler.addEventListener('hardwareBackPress', handleBackButton);
     return () => {
       // BackHandler.removeEventListener('hardwareBackPress', handleBackButton); // does not unmount
       // unsubscribe();
       unsubscribe.current();
     }
-  }, []);
+  }, [loading, getCurrentProfile]);
 
   const isFocused = useIsFocused();
 
@@ -51,6 +80,7 @@ const ProfileTab = ({ authenticate: { user, uid }, removePhoto, uploadPhoto, isA
 
   console.log(`tab 1 ${isFocused}`);
 
+  console.log('formData', formData)
   // const handleBackButton = () => {
   // Alert.alert(
   //   'Exit App',
@@ -68,6 +98,18 @@ const ProfileTab = ({ authenticate: { user, uid }, removePhoto, uploadPhoto, isA
   //   BackHandler.exitApp();
   //   return true;
   // }
+
+  // const [] = useState({
+  //   company: '',
+  //   location: '',
+  //   bio: '',
+  //   twitter: '',
+  //   facebook: '',
+  //   linkedin: '',
+  //   youtube: '',
+  //   instagram: ''
+  // });
+  const { bio, job, company } = formData
 
   const takePhotoFromCamera = () => {
     ImagePicker.openCamera({
@@ -95,6 +137,77 @@ const ProfileTab = ({ authenticate: { user, uid }, removePhoto, uploadPhoto, isA
       setProfileImage(false);
       setShowFloatingButton(true)
     });
+  }
+
+  // const onChange = (e) => {
+  //   setFormData({ ...formData, [e.target.name]: e.target.value })
+  // }
+
+  const onChange = (name, value) => {
+    setFormData({ ...formData, [name]: value })
+  }
+
+  const profileModal = () => {
+    return (
+      <Modal
+        animationType="fade"
+        transparent={false}
+        visible={showModal}
+        onRequestClose={() => {
+          // Alert.alert("Modal has been closed.");
+        }}
+      >
+
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <TouchableHighlight onPress={() => {
+              setShowModal(!showModal);
+              setShowFloatingButton(true)
+
+            }} style={[{ position: 'absolute', top: 4, right: 4 }]}>
+              <Ionicons name='ios-close-outline' size={30} color='black' />
+            </TouchableHighlight>
+            {/* <TouchableHighlight>
+              <Text style={styles.modalText}>Profile</Text>
+            </TouchableHighlight> */}
+            <View>
+              {data ?
+                <View style={[styles.signIn]}>
+                  <Input label={'Bio'} name='bio' placeholder={'About you'} value={bio} onChangeText={(value) => {
+                    onChange('bio', value)
+                  }} />
+                </View> : null
+              }
+
+              <View style={[styles.signIn]}>
+                <Input label={'Job title'} name={'job'} placeholder={'Add job title'} value={job} onChangeText={(value) => {
+                  onChange('job', value)
+                }} />
+              </View>
+              <View style={[styles.signIn]}>
+                <Input label={'Company'} name={'company'} placeholder={'Add company'} value={company} onChangeText={(value) => {
+                  onChange('company', value)
+                }} />
+              </View>
+              {data ?
+                <View style={styles.ActiveContainer}>
+                  <Text style={[styles.text, { marginLeft: 20, fontSize: 18 }]}>Show age</Text>
+                  <Switch style={[{ marginRight: 20 }]} value={data.show} onValueChange={(value) => { isActive(value) }} />
+                </View> : null
+              }
+              <TouchableOpacity >
+                <LinearGradient colors={['#05375a', '#05375a']} style={[styles.signIn]}>
+                  <Text style={[styles.textSignIn]}>Save</Text>
+                  <Ionicons name='ios-arrow-forward' size={20} color='white' />
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+
+          </View>
+
+        </View>
+
+      </Modal >)
   }
 
   const bs = useRef();
@@ -170,13 +283,20 @@ const ProfileTab = ({ authenticate: { user, uid }, removePhoto, uploadPhoto, isA
                     setProfileImage(true)
                     bs.current.snapTo(0);
                   }}>
-                    <Ionicons name="ios-add" size={48} color="#DFD8C8" style={{ marginTop: 6, marginLeft: 4 }}></Ionicons>
+                    <Ionicons name="ios-add" size={48} color="#DFD8C8" style={{ marginTop: 2, marginLeft: 4 }}></Ionicons>
                   </TouchableOpacity>
                 </View>
               </Animatable.View>
               <View style={styles.infoContainer}>
                 <Text style={[styles.text, { fontWeight: "200", fontSize: 36 }]}>{data && data.fullName}</Text>
-                <Text style={[styles.text, { color: "#AEB5BC", fontSize: 14 }]}>Bio</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowFloatingButton(false)
+                    setShowModal(!showModal)
+                  }
+                  }>
+                  <Text style={[styles.text, { color: "#AEB5BC", fontSize: 14 }]}>Edit Profile</Text>
+                </TouchableOpacity>
               </View>
               {data ?
                 <View style={styles.ActiveContainer}>
@@ -207,7 +327,7 @@ const ProfileTab = ({ authenticate: { user, uid }, removePhoto, uploadPhoto, isA
                           setShowFloatingButton(false)
                           bs.current.snapTo(0)
                         }}>
-                          <Ionicons name="ios-add" size={20} color="#DFD8C8" style={{ marginTop: 4, marginLeft: 2 }}></Ionicons>
+                          <Ionicons name="ios-add" size={20} color="#DFD8C8" style={{ marginTop: 2, marginLeft: 2 }}></Ionicons>
                         </TouchableOpacity>
                       </TouchableOpacity>
                     );
@@ -218,7 +338,7 @@ const ProfileTab = ({ authenticate: { user, uid }, removePhoto, uploadPhoto, isA
                       setShowFloatingButton(false)
                       bs.current.snapTo(0)
                     }}>
-                      <Ionicons name="ios-add" size={20} color="#DFD8C8" style={{ marginTop: 4, marginLeft: 2 }}></Ionicons>
+                      <Ionicons name="ios-add" size={20} color="#DFD8C8" style={{ marginTop: 2, marginLeft: 2 }}></Ionicons>
                     </TouchableOpacity>
                   </View> : null}
                 </ScrollView>
@@ -238,7 +358,7 @@ const ProfileTab = ({ authenticate: { user, uid }, removePhoto, uploadPhoto, isA
           }
         </>
       }
-
+      {profileModal()}
     </View >
   )
 }
@@ -446,14 +566,50 @@ let styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
   },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22
+  },
+  modalView: {
+    margin: 8,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 25,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5
+  },
+  signIn: {
+    width: '100%',
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 10,
+    flexDirection: 'row'
+  },
+  textSignIn: {
+    color: 'white',
+    fontWeight: 'bold',
+    margin: 8,
+    fontSize: 18
+  },
 })
 
 
 
 const mapStateToProps = (state) => {
   return {
-    authenticate: state.auth
+    authenticate: state.auth,
+    profile: state.profile
   }
 }
 
-export default connect(mapStateToProps, { uploadPhoto, removePhoto, loadUser, isActive })(ProfileTab)
+export default connect(mapStateToProps, { getCurrentProfile, uploadPhoto, removePhoto, loadUser, isActive })(ProfileTab)

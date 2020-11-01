@@ -8,3 +8,8 @@ export const AUTH_ERROR = 'AUTH_ERROR';
 export const LOGIN_SUCCESS = 'LOGIN_SUCCESS';
 export const LOGIN_FAIL = 'LOGIN_FAIL';
 export const LOG_OUT = 'LOG_OUT';
+
+export const UPDATE_LOCATION = 'UPDATE_LOCATION';
+export const UPDATE_DISTANCE = 'UPDATE_DISTANCE';
+export const UPDATE_RANGE = 'UPDATE_RANGE';
+export const GET_PROFILE = 'GET_PROFILE';

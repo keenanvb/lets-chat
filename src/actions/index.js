@@ -1,3 +1,3 @@
-export * from './alertActions'
-export * from './authActions'
-export * from './profileAction'
+export * from './alertActions';
+export * from './authActions';
+export * from './profileActions';
