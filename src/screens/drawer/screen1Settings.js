@@ -1,15 +1,14 @@
 import React, { Component } from 'react';
-import { View, Text } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { styles } from '../../styles/styles.js'
+import { styles } from '../../styles/styles.js';
 
 const Settings = () => {
-  return (
-    <View style={styles.center}>
-      <Text style={styles.title}>Settings</Text>
-    </View>
-  )
-}
-
+	return (
+		<View style={styles.center}>
+			<Text style={styles.title}>Settings</Text>
+		</View>
+	);
+};
 
 export default Settings;
